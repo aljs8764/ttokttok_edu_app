@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/flavor.dart';
 import '../../app/theme.dart';
@@ -119,6 +120,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                           : const Text('로그인'),
                     ),
+                    if (!teacher) ...[
+                      const SizedBox(height: 8),
+                      OutlinedButton(onPressed: _busy ? null : () => context.push('/signup'), child: const Text('처음이에요 · 가입하기')),
+                    ],
                     const SizedBox(height: 16),
                     Text(
                       teacher ? '계정은 원장님이 초대 메일 또는 임시 비밀번호로 만들어 드립니다.' : '학원에 등록된 보호자 번호로 가입하면 자녀가 자동으로 연결됩니다.',

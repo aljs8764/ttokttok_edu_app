@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/flavor.dart';
@@ -84,6 +85,30 @@ class AuthController extends Notifier<AuthState> {
     }
     await _session.saveInstitution(inst);
     state = AuthState(status: AuthStatus.loggedIn, user: user, institutionId: inst);
+  }
+
+  /// 학부모 가입 — 학원에 등록된 보호자 번호와 같으면 자녀가 자동 연결된다.
+  /// 가입 화면에서 동의한 약관은 가입 직후 /me/terms/agreements 로 기록한다.
+  Future<void> signUpParent({required String name, required String phone, required String password, required List<String> termsIds}) async {
+    final Map<String, dynamic> json;
+    try {
+      json = await _api.publicPost('auth/parents', {'name': name.trim(), 'phone': phone, 'password': password});
+    } catch (e) {
+      throw ApiException.from(e);
+    }
+    final user = AppUser.fromJson(json['user'] as Map<String, dynamic>);
+    await _session.saveTokens(TokenPair.fromJson(json));
+    await _session.storage.writeUser(user);
+    await _session.storage.writeLastLoginId(phone);
+    await _session.saveInstitution(null);
+    if (termsIds.isNotEmpty) {
+      try {
+        await _api.dio.post<void>('me/terms/agreements', data: {'termsIds': termsIds}, options: Options(extra: {'noInstitution': true}));
+      } catch (_) {
+        // 실패해도 다음 실행 때 약관 게이트가 다시 묻는다
+      }
+    }
+    state = AuthState(status: AuthStatus.loggedIn, user: user);
   }
 
   Future<void> selectInstitution(String institutionId) async {

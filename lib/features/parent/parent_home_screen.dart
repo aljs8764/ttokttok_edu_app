@@ -1,54 +1,85 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme.dart';
-import '../../core/api/api_error.dart';
-import '../../core/auth/auth_controller.dart';
-import '../../core/providers.dart';
+import 'child_selector.dart';
+import 'more_tab.dart';
+import 'notices_tab.dart';
+import 'parent_providers.dart';
+import 'schedule_tab.dart';
+import 'terms_gate.dart';
+import 'timeline_tab.dart';
 
-/// 학부모앱 자리 — 다음 단계에서 PAR-001 타임라인·PAR-004 알림장함·PAR-005 행사 응답·PAR-003 스케줄을 채운다.
-/// 지금은 로그인과 자녀 연결(/me/children)만 확인할 수 있다.
-final _childrenProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-  try {
-    final r = await ref.watch(apiClientProvider).dio.get<List<dynamic>>('me/children', options: _noInst);
-    return r.data!.cast<Map<String, dynamic>>();
-  } catch (e) {
-    throw ApiException.from(e);
-  }
-});
-
-final _noInst = Options(extra: {'noInstitution': true});
-
-class ParentHomeScreen extends ConsumerWidget {
+/// 학부모앱 홈 — 하단 탭 4개: 안심 타임라인(PAR-001) · 알림장(PAR-004) · 일정·행사(PAR-003·005) · 더보기
+/// 위쪽 자녀 선택은 모든 탭에 같이 적용된다.
+class ParentHomeScreen extends ConsumerStatefulWidget {
   const ParentHomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final children = ref.watch(_childrenProvider);
-    final user = ref.watch(authControllerProvider).user;
+  ConsumerState<ParentHomeScreen> createState() => _ParentHomeScreenState();
+}
+
+class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with WidgetsBindingObserver {
+  int _tab = 0;
+
+  static const _titles = ['우리 아이', '알림장', '일정·행사', '더보기'];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // 개정 약관 재동의 (필수 약관이 남아 있으면 닫을 수 없다)
+    WidgetsBinding.instance.addPostFrameCallback((_) => showTermsGateIfNeeded(context, ref));
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// 학부모 실시간 소켓은 아직 없다(스펙: /user/queue 는 다음 단계) — 앱이 앞으로 오면 다시 읽는다
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.invalidate(timelineProvider);
+      ref.invalidate(noticesProvider);
+      ref.invalidate(eventsProvider);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final unread = ref.watch(unreadNoticeCountProvider);
+    final pendingRsvp = ref.watch(eventsProvider).valueOrNull?.where((e) => e.needsAnswer).length ?? 0;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('똑똑'),
-        actions: [IconButton(icon: const Icon(Icons.logout), onPressed: () => ref.read(authControllerProvider.notifier).logout())],
+        title: Text(_titles[_tab]),
+        bottom: _tab < 3 ? const PreferredSize(preferredSize: Size.fromHeight(52), child: ChildSelector()) : null,
       ),
-      body: children.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(errorMessage(e))),
-        data: (list) => ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Text('${user?.name ?? ''} 님', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 12),
-            if (list.isEmpty)
-              const Text('연결된 자녀가 없습니다. 학원에 등록된 보호자 번호와 가입한 번호가 같은지 확인해 주세요.',
-                  style: TextStyle(color: AppColors.textSecondary)),
-            for (final c in list)
-              Card(child: ListTile(title: Text(c['name'] as String), subtitle: Text(c['institutionName'] as String))),
-            const SizedBox(height: 24),
-            const Text('타임라인·알림장·행사 화면은 준비 중입니다.', style: TextStyle(color: AppColors.textSecondary)),
-          ],
-        ),
+      body: IndexedStack(
+        index: _tab,
+        children: const [TimelineTab(), NoticesTab(), ScheduleTab(), MoreTab()],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _tab,
+        onDestinationSelected: (i) => setState(() => _tab = i),
+        indicatorColor: AppColors.primary.withValues(alpha: 0.1),
+        destinations: [
+          const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: '홈'),
+          NavigationDestination(
+            icon: Badge(isLabelVisible: unread > 0, label: Text('$unread'), child: const Icon(Icons.mail_outline)),
+            selectedIcon: Badge(isLabelVisible: unread > 0, label: Text('$unread'), child: const Icon(Icons.mail)),
+            label: '알림장',
+          ),
+          NavigationDestination(
+            icon: Badge(isLabelVisible: pendingRsvp > 0, label: Text('$pendingRsvp'), child: const Icon(Icons.event_outlined)),
+            selectedIcon: Badge(isLabelVisible: pendingRsvp > 0, label: Text('$pendingRsvp'), child: const Icon(Icons.event)),
+            label: '일정',
+          ),
+          const NavigationDestination(icon: Icon(Icons.more_horiz), label: '더보기'),
+        ],
       ),
     );
   }

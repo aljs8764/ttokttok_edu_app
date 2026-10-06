@@ -24,7 +24,7 @@ flutter run -t lib/main_teacher.dart
 # 실기기 / 다른 서버
 flutter run -t lib/main_teacher.dart --dart-define=API_BASE_URL=http://192.168.0.10:8080 --dart-define=WS_URL=ws://192.168.0.10:8080/ws
 
-# 학부모앱 (지금은 로그인·자녀 연결 확인만)
+# 학부모앱
 flutter run -t lib/main_parent.dart
 ```
 
@@ -45,7 +45,8 @@ lib/
   features/
     auth/     AUTH-001 로그인, 기관 선택, AUTH-005 비밀번호 변경(임시 비번이면 강제)
     teacher/  담당 반 목록 → 반 출결: ATT-005 원터치 등원, ATT-006 하원+목적지, ATT-002 수동 변경(길게 누름)
-    parent/   (다음 단계) PAR-001 타임라인, PAR-004 알림장함, PAR-005 행사 응답
+    parent/   하단 탭: PAR-001 안심 타임라인 · PAR-004 알림장함(상세 진입 = 열람) · PAR-003 주간 일정 + PAR-005 행사 참석 응답 · 더보기
+              가입(보호자 번호 → 자녀 자동 연결 + 학부모 약관 동의), 약관 재동의 게이트, 자녀 선택(전체/자녀별)
 ```
 
 ## 출결 원터치 동작
@@ -59,5 +60,8 @@ lib/
 
 - 푸시(FCM): Firebase 프로젝트 설정 후 토큰을 `PUT /api/v1/me/devices {flavor, platform, token}` 로 등록 (`bootstrap.dart` TODO)
 - 오프라인 큐: 지금은 즉시 재시도만. 장시간 오프라인은 `POST /attendance/bulk` 로 모아 보내는 방식 검토
-- 교사앱 알림장 작성·행사(NTC/EVT 교사 기능), 학부모앱 전체
+- 교사앱 알림장 작성·행사(NTC/EVT 교사 기능)
+- 학부모 실시간: 백엔드 /user/queue 가 아직 없어 앱이 앞으로 올 때·당겨서 새로고침으로 갱신 (푸시가 붙으면 푸시 수신 시 갱신)
+- 첨부 PDF 열기: url_launcher 추가 전까지 링크 복사. 이미지는 바로 표시
+- 휴대폰 SMS 인증(Open Issue 1), 초대 링크 웹 화면(/join/{token})
 - 스펙의 Retrofit·freezed 대신 코드 생성 없이 Dio + 손으로 쓴 모델 (빌드 단계를 줄이려고). 필요하면 나중에 전환

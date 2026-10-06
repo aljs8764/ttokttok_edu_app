@@ -78,6 +78,17 @@ class ApiClient {
     return res.data!;
   }
 
+  /// 로그인 전 공개 API (학부모 가입·약관 조회)
+  Future<T> publicGet<T>(String path, {Map<String, dynamic>? query}) async {
+    final res = await _raw.get<T>(path, queryParameters: query);
+    return res.data as T;
+  }
+
+  Future<Map<String, dynamic>> publicPost(String path, Object data) async {
+    final res = await _raw.post<Map<String, dynamic>>(path, data: data);
+    return res.data!;
+  }
+
   /// 서버 세션 종료 (실패해도 로컬은 지운다)
   Future<void> logout() async {
     final rt = session.tokens?.refreshToken;
