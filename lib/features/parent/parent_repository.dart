@@ -86,6 +86,21 @@ class ParentRepository {
 
   Future<void> agreeTerms(List<String> ids) => _call(() => _dio.post<void>('me/terms/agreements', options: _me, data: {'termsIds': ids}));
 
+  /// PAR-007 학생앱 연결 코드 (8자리, 10분, 1회용)
+  Future<StudentLinkCode> issueStudentLinkCode(String studentId) => _call(() async {
+        final r = await _dio.post<Map<String, dynamic>>('me/children/$studentId/device-links', options: _me);
+        return StudentLinkCode(code: r.data!['code'] as String, expiresAt: DateTime.parse(r.data!['expiresAt'] as String).toLocal());
+      });
+
+  /// 연결된 학생 기기 (최대 3대)
+  Future<List<StudentDeviceInfo>> studentDevices(String studentId) => _call(() async {
+        final r = await _dio.get<List<dynamic>>('me/children/$studentId/devices', options: _me);
+        return r.data!.map((e) => StudentDeviceInfo.fromJson(e as Map<String, dynamic>)).toList();
+      });
+
+  Future<void> revokeStudentDevice(String studentId, String deviceId) =>
+      _call(() => _dio.delete<void>('me/children/$studentId/devices/$deviceId', options: _me));
+
   Future<T> _call<T>(Future<T> Function() f) async {
     try {
       return await f();
@@ -95,7 +110,29 @@ class ParentRepository {
   }
 }
 
-final parentRepositoryProvider = Provider<ParentRepository>((ref) => ParentRepository(ref.watch(apiClientProvider)));
+class StudentLinkCode {
+  const StudentLinkCode({required this.code, required this.expiresAt});
+  final String code;
+  final DateTime expiresAt;
+}
+
+class StudentDeviceInfo {
+  const StudentDeviceInfo({required this.id, required this.deviceName, required this.createdAt, this.lastSeenAt});
+
+  final String id;
+  final String deviceName;
+  final DateTime createdAt;
+  final DateTime? lastSeenAt;
+
+  factory StudentDeviceInfo.fromJson(Map<String, dynamic> j) => StudentDeviceInfo(
+        id: j['id'] as String,
+        deviceName: (j['deviceName'] as String?)?.isNotEmpty == true ? j['deviceName'] as String : '학생 휴대폰',
+        createdAt: DateTime.parse(j['createdAt'] as String).toLocal(),
+        lastSeenAt: j['lastSeenAt'] == null ? null : DateTime.parse(j['lastSeenAt'] as String).toLocal(),
+      );
+}
+
+final parentRepositoryProvider =Provider<ParentRepository>((ref) => ParentRepository(ref.watch(apiClientProvider)));
 
 /// 가입 화면용 — 로그인 전 공개 약관
 Future<List<Terms>> fetchPublicParentTerms(ApiClient api) async {

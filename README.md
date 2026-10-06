@@ -1,6 +1,6 @@
-# 똑똑(Ttok-Ttok) 앱 — 교사·학부모
+# 똑똑(Ttok-Ttok) 앱 — 교사·학부모·학생
 
-스펙: 교사앱·학부모앱 = 하나의 코드베이스, flavor 2개. Flutter 3 · Riverpod · Dio · go_router · flutter_secure_storage · STOMP.
+스펙: 교사앱·학부모앱·학생앱(QR 출석) = 하나의 코드베이스, flavor 3개. Flutter 3 · Riverpod · Dio · go_router · flutter_secure_storage · STOMP.
 백엔드는 `ttokttok_edu_backend`, 관리자 웹은 `ttokttok_edu_react`.
 
 ## 처음 한 번
@@ -26,6 +26,9 @@ flutter run -t lib/main_teacher.dart --dart-define=API_BASE_URL=http://192.168.0
 
 # 학부모앱
 flutter run -t lib/main_parent.dart
+
+# 학생앱 (QR 출석 — 카메라·위치가 필요해 실기기 권장)
+flutter run -t lib/main_student.dart --dart-define=API_BASE_URL=http://192.168.0.10:8080
 ```
 
 스토어용 네이티브 flavor(패키지명·아이콘·스킴 분리)는 배포 준비 때 `android/app/build.gradle` productFlavors 와 iOS scheme 으로 추가한다 (스펙 9장: teacher/parent × dev/prod).
@@ -34,8 +37,8 @@ flutter run -t lib/main_parent.dart
 
 ```
 lib/
-  main_teacher.dart / main_parent.dart   진입점 (flavor)
-  bootstrap.dart                         저장된 세션 복원 → 앱 시작
+  main_teacher.dart / main_parent.dart / main_student.dart   진입점 (flavor)
+  bootstrap.dart                         저장된 세션(학생앱은 기기 토큰) 복원 → 앱 시작
   app/        flavor·환경(--dart-define), 테마, 라우터(로그인·비번 강제 변경·기관 선택 redirect)
   core/
     api/      Dio 클라이언트: access 만료 임박·401 → refresh(한 번에 하나) 후 재시도, X-Institution-Id
@@ -47,6 +50,8 @@ lib/
     teacher/  담당 반 목록 → 반 출결: ATT-005 원터치 등원, ATT-006 하원+목적지, ATT-002 수동 변경(길게 누름)
     parent/   하단 탭: PAR-001 안심 타임라인 · PAR-004 알림장함(상세 진입 = 열람) · PAR-003 주간 일정 + PAR-005 행사 참석 응답 · 더보기
               가입(보호자 번호 → 자녀 자동 연결 + 학부모 약관 동의), 약관 재동의 게이트, 자녀 선택(전체/자녀별)
+              PAR-007 더보기 → 자녀별 "학생앱 연결": 8자리 코드(10분) + 연결 기기 목록·해제
+    student/  STD-001 연결 코드 입력 → 기기 토큰(X-Device-Token) · STD-002 홈(오늘 수업) + QR 스캔(위치 첨부)
 ```
 
 ## 출결 원터치 동작
@@ -56,7 +61,17 @@ lib/
 - 같은 반을 보는 다른 교사·관리자 웹의 변경은 `/topic/class.{반}` 으로 들어와 해당 행만 바뀐다. 앱이 다시 앞으로 오면 목록을 새로 읽는다.
 - 잘못 누른 등원은 ⋮ 또는 길게 눌러 수동 변경 (사유 필수, 학부모에게 정정 푸시 없음).
 
+## 학생 QR 출석 (스펙 7-7)
+
+- 학생은 계정이 없다. 보호자가 학부모앱에서 만든 8자리 코드로 기기를 연결하면 서버가 기기 토큰을 준다 (서버엔 해시만, 자녀당 최대 3대).
+- 학원 입구의 고정 QR(관리자 웹 → 출석 QR 에서 생성·출력)을 찍으면 위치와 함께 `POST /api/v1/student/scan`.
+  서버가 수업 시간·등원 여부로 등원/하원을 정한다. 하원 목적지가 여러 개면 `CHOOSE_DESTINATION` → 고른 뒤 새 키로 다시 보낸다.
+- 실패 코드(422): `QR_INVALID`(재발급된 옛 QR) · `NOT_ENROLLED` · `OUT_OF_RANGE`(지오펜스 밖) · `NO_CLASS_NOW` · `LOCATION_REQUIRED`.
+- 권한: Android `CAMERA`·`ACCESS_FINE_LOCATION`, iOS `NSCameraUsageDescription`·`NSLocationWhenInUseUsageDescription`.
+
 ## 아직 안 한 것
+
+- 학생앱 스토어 분리 빌드(별도 패키지명·아이콘) — 지금은 진입점만 다르다
 
 - 푸시(FCM): Firebase 프로젝트 설정 후 토큰을 `PUT /api/v1/me/devices {flavor, platform, token}` 로 등록 (`bootstrap.dart` TODO)
 - 오프라인 큐: 지금은 즉시 재시도만. 장시간 오프라인은 `POST /attendance/bulk` 로 모아 보내는 방식 검토

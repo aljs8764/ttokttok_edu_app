@@ -10,6 +10,10 @@ import '../features/auth/login_screen.dart';
 import '../features/auth/parent_signup_screen.dart';
 import '../features/parent/notice_detail_screen.dart';
 import '../features/parent/parent_home_screen.dart';
+import '../features/student/link_screen.dart';
+import '../features/student/scan_screen.dart';
+import '../features/student/student_api.dart';
+import '../features/student/student_home_screen.dart';
 import '../features/teacher/class_attendance_screen.dart';
 import '../features/teacher/teacher_home_screen.dart';
 import 'flavor.dart';
@@ -21,8 +25,34 @@ class _AuthListenable extends ChangeNotifier {
   }
 }
 
+/// 학생앱: 기기 연결 상태가 바뀌면 redirect 를 다시 돈다
+class _StudentListenable extends ChangeNotifier {
+  _StudentListenable(Ref<Object?> ref) {
+    ref.listen(studentLinkedProvider, (_, __) => notifyListeners());
+  }
+}
+
+/// 학생앱 (스펙 7-7) — 로그인 없이 연결 코드 → 홈 → QR 스캔
+GoRouter _studentRouter(Ref<Object?> ref) => GoRouter(
+      initialLocation: '/',
+      refreshListenable: _StudentListenable(ref),
+      redirect: (context, state) {
+        final linked = ref.read(studentLinkedProvider);
+        final loc = state.matchedLocation;
+        if (!linked) return loc == '/link' ? null : '/link';
+        if (loc == '/link') return '/';
+        return null;
+      },
+      routes: [
+        GoRoute(path: '/link', builder: (_, __) => const StudentLinkScreen()),
+        GoRoute(path: '/', builder: (_, __) => const StudentHomeScreen()),
+        GoRoute(path: '/scan', builder: (_, __) => const ScanScreen()),
+      ],
+    );
+
 final routerProvider = Provider<GoRouter>((ref) {
   final flavor = ref.watch(appConfigProvider).flavor;
+  if (flavor == Flavor.student) return _studentRouter(ref);
   final teacher = flavor == Flavor.teacher;
 
   return GoRouter(

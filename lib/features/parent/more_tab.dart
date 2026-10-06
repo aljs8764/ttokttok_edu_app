@@ -5,8 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme.dart';
 import '../../core/auth/auth_controller.dart';
 import 'parent_providers.dart';
+import 'student_device_sheet.dart';
 
-/// 더보기 — 연결된 자녀, 비밀번호 변경, 로그아웃
+/// 더보기 — 연결된 자녀(+학생앱 연결 PAR-007), 비밀번호 변경, 로그아웃
 class MoreTab extends ConsumerWidget {
   const MoreTab({super.key});
 
@@ -38,6 +39,11 @@ class MoreTab extends ConsumerWidget {
                         leading: const CircleAvatar(child: Icon(Icons.child_care)),
                         title: Text(c.name),
                         subtitle: Text(c.institutionName),
+                        trailing: TextButton.icon(
+                          icon: const Icon(Icons.qr_code_scanner, size: 18),
+                          label: const Text('학생앱 연결'),
+                          onPressed: () => showStudentDeviceSheet(context, c),
+                        ),
                       ),
                     ),
                 ],
