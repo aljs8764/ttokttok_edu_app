@@ -32,9 +32,10 @@ void openFromPush(WidgetRef ref, PushPayload p) {
     case 'attendance':
       tab.state = 0;
       final studentId = p.data['studentId'];
-      final children = ref.read(childrenProvider).valueOrNull;
-      if (studentId != null && (children == null || children.any((c) => c.studentId == studentId))) {
-        ref.read(selectedChildProvider.notifier).state = studentId;
+      // 푸시는 원생(기관) id 로 온다 → 그 원생의 아이를 고른다 (스펙 7-8)
+      final children = ref.read(childrenProvider).valueOrNull ?? const [];
+      for (final c in children) {
+        if (studentId != null && c.hasStudent(studentId)) ref.read(selectedChildProvider.notifier).state = c.childId;
       }
       router.go('/');
     default:

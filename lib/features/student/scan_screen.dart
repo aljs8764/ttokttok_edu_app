@@ -211,6 +211,9 @@ class _CameraError extends StatelessWidget {
       );
 }
 
+/// "수학학원 초등 A반" — 여러 학원을 다니면 어디서 찍었는지 보여 준다
+String _place(ScanResult r) => [r.institutionName, r.classroomName].whereType<String>().where((s) => s.isNotEmpty).join(' ');
+
 class _Done extends StatelessWidget {
   const _Done({required this.result, required this.onClose});
   final ScanResult result;
@@ -225,13 +228,13 @@ class _Done extends StatelessWidget {
           Icons.login,
           r.attendance?.isLate == true ? AppColors.warning : AppColors.success,
           r.attendance?.isLate == true ? '도착했어요 (지각)' : '도착했어요',
-          '${r.classroomName ?? ''} · $time\n부모님께 알림을 보냈어요',
+          '${_place(r)} · $time\n부모님께 알림을 보냈어요',
         ),
       ScanOutcome.checkedOut => (
           Icons.logout,
           AppColors.info,
           '출발했어요',
-          '${r.classroomName ?? ''} · $time${r.attendance?.nextDestinationName != null ? '\n→ ${r.attendance!.nextDestinationName}' : ''}\n부모님께 알림을 보냈어요',
+          '${_place(r)} · $time${r.attendance?.nextDestinationName != null ? '\n→ ${r.attendance!.nextDestinationName}' : ''}\n부모님께 알림을 보냈어요',
         ),
       _ => (Icons.check_circle_outline, AppColors.muted, '오늘 출석은 이미 끝났어요', r.classroomName ?? ''),
     };
@@ -266,6 +269,7 @@ class _Failed extends StatelessWidget {
       'OUT_OF_RANGE' => '학원 안에서 다시 찍어 주세요. 위치가 정확하지 않으면 잠깐 기다렸다가 다시 해 보세요.',
       'LOCATION_REQUIRED' => '설정 → 앱 → 똑똑 출석 → 위치 권한을 "앱 사용 중 허용"으로 바꿔 주세요.',
       'QR_INVALID' => '입구의 새 QR 을 찍었는지 확인하고, 계속 안 되면 선생님께 말씀해 주세요.',
+      'NOT_ENROLLED' => '이 학원에 아직 등록되지 않았거나, 부모님 앱에서 같은 아이로 합쳐지지 않았어요. 부모님께 말씀해 주세요.',
       'NO_CLASS_NOW' => '수업 시작 1시간 전부터 출석할 수 있어요.',
       _ => null,
     };

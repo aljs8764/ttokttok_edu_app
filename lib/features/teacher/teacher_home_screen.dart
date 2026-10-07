@@ -21,12 +21,19 @@ class TeacherHomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
+        // 여러 학원 소속이면 제목을 눌러 학원을 바꾼다 (스펙 7-8)
+        title: InkWell(
+          onTap: (auth.user?.staffMemberships.length ?? 0) > 1 ? () => context.push('/institution') : null,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(auth.membership?.institutionName ?? '똑똑'),
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              Flexible(child: Text(auth.membership?.institutionName ?? '똑똑', overflow: TextOverflow.ellipsis)),
+              if ((auth.user?.staffMemberships.length ?? 0) > 1) const Icon(Icons.arrow_drop_down),
+            ]),
             Text(DateFormat('M월 d일 (E)', 'ko_KR').format(now), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w400)),
           ],
+          ),
         ),
         actions: [_AccountMenu(auth: auth)],
       ),

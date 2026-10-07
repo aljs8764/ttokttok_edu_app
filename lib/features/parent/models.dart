@@ -2,19 +2,81 @@
 
 DateTime? _t(Object? v) => v == null ? null : DateTime.parse(v as String).toLocal();
 
+/// 아이 (스펙 7-8). 다자녀 = 아이 여러 명, 한 아이가 여러 학원·학교 = enrollments 여러 개.
+/// 상단 자녀 선택·목록 필터는 아이 id 로 한다 (서버가 그 아이의 모든 기관으로 펼친다).
 class Child {
-  const Child({required this.studentId, required this.name, required this.institutionId, required this.institutionName});
+  const Child({required this.childId, required this.name, required this.enrollments});
+
+  final String childId;
+  final String name;
+  final List<Enrollment> enrollments;
+
+  /// "수학학원 · 영어학원"
+  String get institutionsLabel => enrollments.map((e) => e.institutionName).join(' · ');
+
+  bool hasStudent(String studentId) => enrollments.any((e) => e.studentId == studentId);
+
+  factory Child.fromJson(Map<String, dynamic> j) => Child(
+        childId: j['childId'] as String,
+        name: j['name'] as String,
+        enrollments: (j['enrollments'] as List).map((e) => Enrollment.fromJson(e as Map<String, dynamic>)).toList(),
+      );
+}
+
+/// 아이가 다니는 기관 하나 (기관이 관리하는 원생 기록)
+class Enrollment {
+  const Enrollment({
+    required this.studentId,
+    required this.studentName,
+    required this.institutionId,
+    required this.institutionName,
+    required this.institutionType,
+    required this.status,
+  });
 
   final String studentId;
-  final String name;
+  final String studentName;
   final String institutionId;
   final String institutionName;
 
-  factory Child.fromJson(Map<String, dynamic> j) => Child(
+  /// ACADEMY | SCHOOL | DAYCARE | OTHER
+  final String institutionType;
+
+  /// ACTIVE | PAUSED | WITHDRAWN
+  final String status;
+
+  String get typeLabel => switch (institutionType) {
+        'SCHOOL' => '학교',
+        'DAYCARE' => '어린이집',
+        'OTHER' => '기관',
+        _ => '학원',
+      };
+
+  factory Enrollment.fromJson(Map<String, dynamic> j) => Enrollment(
         studentId: j['studentId'] as String,
-        name: j['name'] as String,
+        studentName: j['studentName'] as String,
         institutionId: j['institutionId'] as String,
         institutionName: j['institutionName'] as String,
+        institutionType: j['institutionType'] as String? ?? 'ACADEMY',
+        status: j['status'] as String? ?? 'ACTIVE',
+      );
+}
+
+/// 같은 아이로 보이는 묶음 — "같은 아이인가요?" (GET /me/children/merge-suggestions)
+class MergeSuggestion {
+  const MergeSuggestion({required this.childIds, required this.name, required this.institutionNames});
+
+  final List<String> childIds;
+  final String name;
+  final List<String> institutionNames;
+
+  /// 앱에서 "다른 아이예요"를 눌렀을 때 기억하는 키
+  String get key => ([...childIds]..sort()).join(',');
+
+  factory MergeSuggestion.fromJson(Map<String, dynamic> j) => MergeSuggestion(
+        childIds: (j['childIds'] as List).cast<String>(),
+        name: j['name'] as String,
+        institutionNames: (j['institutionNames'] as List).cast<String>(),
       );
 }
 
@@ -22,6 +84,7 @@ class Child {
 class TimelineItem {
   const TimelineItem({
     required this.studentId,
+    this.childId,
     required this.studentName,
     required this.institutionName,
     required this.type,
@@ -32,6 +95,7 @@ class TimelineItem {
   });
 
   final String studentId;
+  final String? childId;
   final String studentName;
   final String institutionName;
 
@@ -46,6 +110,7 @@ class TimelineItem {
 
   factory TimelineItem.fromJson(Map<String, dynamic> j) => TimelineItem(
         studentId: j['studentId'] as String,
+        childId: j['childId'] as String?,
         studentName: j['studentName'] as String,
         institutionName: j['institutionName'] as String,
         type: j['type'] as String,

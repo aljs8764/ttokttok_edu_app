@@ -40,7 +40,7 @@ class _StudentDeviceSheetState extends ConsumerState<_StudentDeviceSheet> {
   @override
   void initState() {
     super.initState();
-    _devices = _repo.studentDevices(widget.child.studentId);
+    _devices = _repo.studentDevices(widget.child.childId);
   }
 
   @override
@@ -55,7 +55,7 @@ class _StudentDeviceSheetState extends ConsumerState<_StudentDeviceSheet> {
       _error = null;
     });
     try {
-      final c = await _repo.issueStudentLinkCode(widget.child.studentId);
+      final c = await _repo.issueStudentLinkCode(widget.child.childId);
       _timer?.cancel();
       setState(() {
         _code = c;
@@ -78,7 +78,7 @@ class _StudentDeviceSheetState extends ConsumerState<_StudentDeviceSheet> {
     }
   }
 
-  void _reloadDevices() => setState(() => _devices = _repo.studentDevices(widget.child.studentId));
+  void _reloadDevices() => setState(() => _devices = _repo.studentDevices(widget.child.childId));
 
   Future<void> _revoke(StudentDeviceInfo d) async {
     final ok = await showDialog<bool>(
@@ -94,7 +94,7 @@ class _StudentDeviceSheetState extends ConsumerState<_StudentDeviceSheet> {
     );
     if (ok != true) return;
     try {
-      await _repo.revokeStudentDevice(widget.child.studentId, d.id);
+      await _repo.revokeStudentDevice(widget.child.childId, d.id);
       _reloadDevices();
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(e))));
@@ -117,7 +117,7 @@ class _StudentDeviceSheetState extends ConsumerState<_StudentDeviceSheet> {
             Text('${widget.child.name} 학생앱 연결', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
             const SizedBox(height: 6),
             const Text(
-              '자녀 휴대폰에 "똑똑 출석" 앱을 설치하고 아래 코드를 입력하면, 학원 입구 QR 로 등원·하원을 직접 찍을 수 있어요.',
+              '자녀 휴대폰에 "똑똑 출석" 앱을 설치하고 아래 코드를 입력하면, 다니는 모든 학원 입구 QR 로 등원·하원을 직접 찍을 수 있어요.',
               style: TextStyle(color: AppColors.textSecondary, height: 1.5),
             ),
             const SizedBox(height: 16),

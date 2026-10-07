@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'parent_providers.dart';
 
-/// 자녀 선택 칩 (전체 / 자녀별). 자녀가 한 명이면 이름만 보여 준다.
+/// 자녀 선택 칩 (전체 / 아이별). 아이 하나가 여러 기관에 다니면 그 기관 모두가 한 칩이다 (스펙 7-8).
 class ChildSelector extends ConsumerWidget {
   const ChildSelector({super.key});
 
@@ -33,9 +33,9 @@ class ChildSelector extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                label: Text(multi ? '${c.name} · ${c.institutionName}' : '${c.name} · ${c.institutionName}'),
-                selected: multi ? selected == c.studentId : true,
-                onSelected: multi ? (_) => ref.read(selectedChildProvider.notifier).state = c.studentId : null,
+                label: Text(c.enrollments.length > 2 ? '${c.name} · 기관 ${c.enrollments.length}곳' : '${c.name} · ${c.institutionsLabel}'),
+                selected: multi ? selected == c.childId : true,
+                onSelected: multi ? (_) => ref.read(selectedChildProvider.notifier).state = c.childId : null,
               ),
             ),
         ],

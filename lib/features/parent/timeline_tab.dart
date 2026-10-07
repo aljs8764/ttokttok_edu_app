@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
+import 'merge_banner.dart';
 import 'models.dart';
 import 'parent_providers.dart';
 
@@ -29,7 +30,15 @@ class TimelineTab extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _Empty(icon: Icons.cloud_off, text: errorMessage(e)),
         data: (s) {
-          if (s.items.isEmpty) return const _Empty(icon: Icons.schedule, text: '아직 등·하원 기록이 없습니다');
+          if (s.items.isEmpty) {
+            return ListView(padding: const EdgeInsets.all(16), children: const [
+              MergeSuggestionBanner(),
+              SizedBox(height: 80),
+              Icon(Icons.schedule, size: 48, color: AppColors.muted),
+              SizedBox(height: 12),
+              Text('아직 등·하원 기록이 없습니다', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
+            ]);
+          }
           final rows = _withDateHeaders(s.items);
           return NotificationListener<ScrollNotification>(
             onNotification: (n) {
@@ -38,8 +47,11 @@ class TimelineTab extends ConsumerWidget {
             },
             child: ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              itemCount: rows.length + 1,
-              itemBuilder: (_, i) {
+              itemCount: rows.length + 2,
+              itemBuilder: (_, idx) {
+                // 맨 위: "같은 아이인가요?" (스펙 7-8, 후보가 없으면 빈 칸)
+                if (idx == 0) return const MergeSuggestionBanner();
+                final i = idx - 1;
                 if (i == rows.length) {
                   return s.loadingMore
                       ? const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator(strokeWidth: 2)))

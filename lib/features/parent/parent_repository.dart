@@ -22,6 +22,29 @@ class ParentRepository {
         return r.data!.map((e) => Child.fromJson(e as Map<String, dynamic>)).toList();
       });
 
+  /// 스펙 7-8 같은 아이 합치기 후보
+  Future<List<MergeSuggestion>> mergeSuggestions() => _call(() async {
+        final r = await _dio.get<List<dynamic>>('me/children/merge-suggestions', options: _me);
+        return r.data!.map((e) => MergeSuggestion.fromJson(e as Map<String, dynamic>)).toList();
+      });
+
+  /// source 아이를 target 으로 합친다 (원생·보호자·학생앱 기기)
+  Future<Child> mergeChildren(String targetChildId, String sourceChildId) => _call(() async {
+        final r = await _dio.post<Map<String, dynamic>>('me/children/$targetChildId/merge', options: _me, data: {'sourceChildId': sourceChildId});
+        return Child.fromJson(r.data!);
+      });
+
+  /// 잘못 합친 기관 하나를 다른 아이로
+  Future<Child> splitChild(String childId, String studentId) => _call(() async {
+        final r = await _dio.post<Map<String, dynamic>>('me/children/$childId/split', options: _me, data: {'studentId': studentId});
+        return Child.fromJson(r.data!);
+      });
+
+  Future<Child> renameChild(String childId, String name) => _call(() async {
+        final r = await _dio.patch<Map<String, dynamic>>('me/children/$childId', options: _me, data: {'name': name.trim()});
+        return Child.fromJson(r.data!);
+      });
+
   /// PAR-001 커서 페이징: before = 마지막 항목의 occurredAt
   Future<List<TimelineItem>> timeline({String? childId, DateTime? before, int limit = 20}) => _call(() async {
         final r = await _dio.get<List<dynamic>>('me/timeline', options: _me, queryParameters: {
@@ -86,20 +109,20 @@ class ParentRepository {
 
   Future<void> agreeTerms(List<String> ids) => _call(() => _dio.post<void>('me/terms/agreements', options: _me, data: {'termsIds': ids}));
 
-  /// PAR-007 학생앱 연결 코드 (8자리, 10분, 1회용)
-  Future<StudentLinkCode> issueStudentLinkCode(String studentId) => _call(() async {
-        final r = await _dio.post<Map<String, dynamic>>('me/children/$studentId/device-links', options: _me);
+  /// PAR-007 학생앱 연결 코드 (8자리, 10분, 1회용). 기기는 아이에 묶인다 — 모든 기관에서 출석
+  Future<StudentLinkCode> issueStudentLinkCode(String childId) => _call(() async {
+        final r = await _dio.post<Map<String, dynamic>>('me/children/$childId/device-links', options: _me);
         return StudentLinkCode(code: r.data!['code'] as String, expiresAt: DateTime.parse(r.data!['expiresAt'] as String).toLocal());
       });
 
   /// 연결된 학생 기기 (최대 3대)
-  Future<List<StudentDeviceInfo>> studentDevices(String studentId) => _call(() async {
-        final r = await _dio.get<List<dynamic>>('me/children/$studentId/devices', options: _me);
+  Future<List<StudentDeviceInfo>> studentDevices(String childId) => _call(() async {
+        final r = await _dio.get<List<dynamic>>('me/children/$childId/devices', options: _me);
         return r.data!.map((e) => StudentDeviceInfo.fromJson(e as Map<String, dynamic>)).toList();
       });
 
-  Future<void> revokeStudentDevice(String studentId, String deviceId) =>
-      _call(() => _dio.delete<void>('me/children/$studentId/devices/$deviceId', options: _me));
+  Future<void> revokeStudentDevice(String childId, String deviceId) =>
+      _call(() => _dio.delete<void>('me/children/$childId/devices/$deviceId', options: _me));
 
   Future<T> _call<T>(Future<T> Function() f) async {
     try {

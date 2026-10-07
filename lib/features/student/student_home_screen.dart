@@ -56,7 +56,7 @@ class _StudentHomeScreenState extends ConsumerState<StudentHomeScreen> with Widg
     final home = ref.watch(studentHomeProvider);
     return Scaffold(
       appBar: AppBar(
-        title: Text(home.valueOrNull?.info.institutionName ?? '똑똑 출석'),
+        title: const Text('똑똑 출석'),
         actions: [
           PopupMenuButton<String>(
             onSelected: (_) => _confirmLogout(),
@@ -78,6 +78,8 @@ class _StudentHomeScreenState extends ConsumerState<StudentHomeScreen> with Widg
             children: [
               Text('${h.info.studentName} 안녕하세요', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
               Text(DateFormat('M월 d일 (E)', 'ko_KR').format(DateTime.now()), style: const TextStyle(color: AppColors.textSecondary)),
+              if (h.info.institutionNames.isNotEmpty)
+                Text(h.info.institutionName, style: const TextStyle(color: AppColors.muted, fontSize: 13)),
               const SizedBox(height: 24),
               SizedBox(
                 height: 120,
@@ -92,7 +94,7 @@ class _StudentHomeScreenState extends ConsumerState<StudentHomeScreen> with Widg
                 ),
               ),
               const SizedBox(height: 8),
-              const Text('학원 입구에 붙은 QR 을 찍으면 도착·출발이 부모님께 알림으로 가요.',
+              const Text('다니는 학원 어디서든 입구 QR 을 찍으면 도착·출발이 부모님께 알림으로 가요.',
                   textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
               const SizedBox(height: 28),
               const Text('오늘 수업', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
@@ -104,7 +106,7 @@ class _StudentHomeScreenState extends ConsumerState<StudentHomeScreen> with Widg
                   child: Card(
                     child: ListTile(
                       title: Text(c.classroomName, style: const TextStyle(fontWeight: FontWeight.w700)),
-                      subtitle: Text('${c.startTime}~${c.endTime}${_times(c)}'),
+                      subtitle: Text('${h.info.institutionNames.length > 1 ? '${c.institutionName} · ' : ''}${c.startTime}~${c.endTime}${_times(c)}'),
                       trailing: c.attendance == null
                           ? const Text('등원 전', style: TextStyle(color: AppColors.muted))
                           : StatusBadge(c.attendance!.status, isLate: c.attendance!.isLate, isEarlyLeave: c.attendance!.isEarlyLeave),

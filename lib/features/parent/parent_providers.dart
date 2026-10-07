@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/auth/auth_controller.dart';
 import 'models.dart';
@@ -10,7 +11,39 @@ final childrenProvider = FutureProvider<List<Child>>((ref) {
   return ref.watch(parentRepositoryProvider).children();
 });
 
-/// 상단 자녀 선택 — null = 전체. 다른 계정으로 로그인하면 초기화
+/// 스펙 7-8: 같은 아이로 보이는 묶음 중 "다른 아이예요"로 넘긴 것은 이 기기에서 다시 묻지 않는다
+class MergeSuggestionsController extends AsyncNotifier<List<MergeSuggestion>> {
+  static const _prefKey = 'dismissed_merge_suggestions';
+
+  @override
+  Future<List<MergeSuggestion>> build() async {
+    ref.watch(childrenProvider);
+    final all = await ref.read(parentRepositoryProvider).mergeSuggestions();
+    final dismissed = (await SharedPreferences.getInstance()).getStringList(_prefKey) ?? const [];
+    return all.where((m) => !dismissed.contains(m.key)).toList();
+  }
+
+  Future<void> dismiss(MergeSuggestion m) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_prefKey, {...?prefs.getStringList(_prefKey), m.key}.toList());
+    state = AsyncData([...?state.valueOrNull?.where((x) => x.key != m.key)]);
+  }
+
+  /// 첫 아이로 나머지를 합친다
+  Future<void> merge(MergeSuggestion m) async {
+    final repo = ref.read(parentRepositoryProvider);
+    final target = m.childIds.first;
+    for (final source in m.childIds.skip(1)) {
+      await repo.mergeChildren(target, source);
+    }
+    ref.read(selectedChildProvider.notifier).state = null;
+    ref.invalidate(childrenProvider);
+  }
+}
+
+final mergeSuggestionsProvider = AsyncNotifierProvider<MergeSuggestionsController, List<MergeSuggestion>>(MergeSuggestionsController.new);
+
+/// 상단 자녀 선택(아이 id) — null = 전체. 다른 계정으로 로그인하면 초기화
 final selectedChildProvider = StateProvider<String?>((ref) {
   ref.watch(authControllerProvider.select((s) => s.user?.id));
   return null;

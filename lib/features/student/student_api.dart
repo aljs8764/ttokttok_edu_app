@@ -10,17 +10,34 @@ import '../teacher/models.dart' show Attendance;
 /// 학생앱 API (스펙 7-7). 학생은 계정이 없어 JWT 대신 X-Device-Token 으로 인증한다.
 /// 토큰은 보호자가 만든 8자리 연결 코드로 한 번 받고 secure storage 에 둔다.
 
+/// 기기는 아이에 묶인다 (스펙 7-8) — 아이가 다니는 모든 기관에서 이 폰으로 출석
 class StudentInfo {
-  const StudentInfo({required this.studentId, required this.studentName, required this.institutionName});
+  const StudentInfo({required this.childId, required this.studentName, required this.institutionNames});
 
-  final String studentId;
+  final String childId;
   final String studentName;
-  final String institutionName;
+  final List<String> institutionNames;
+
+  String get institutionName => institutionNames.isEmpty ? '' : institutionNames.join(' · ');
+
+  factory StudentInfo.fromJson(Map<String, dynamic> d) => StudentInfo(
+        childId: (d['child'] as Map)['id'] as String,
+        studentName: (d['child'] as Map)['name'] as String,
+        institutionNames: (d['institutions'] as List? ?? const []).map((i) => (i as Map)['name'] as String).toList(),
+      );
 }
 
 class TodayClass {
-  const TodayClass({required this.classroomId, required this.classroomName, required this.startTime, required this.endTime, this.attendance});
+  const TodayClass({
+    required this.institutionName,
+    required this.classroomId,
+    required this.classroomName,
+    required this.startTime,
+    required this.endTime,
+    this.attendance,
+  });
 
+  final String institutionName;
   final String classroomId;
   final String classroomName;
   final String startTime;
@@ -28,6 +45,7 @@ class TodayClass {
   final Attendance? attendance;
 
   factory TodayClass.fromJson(Map<String, dynamic> j) => TodayClass(
+        institutionName: j['institutionName'] as String? ?? '',
         classroomId: j['classroomId'] as String,
         classroomName: j['classroomName'] as String,
         startTime: (j['startTime'] as String).substring(0, 5),
@@ -55,10 +73,11 @@ class DestinationOption {
 enum ScanOutcome { checkedIn, checkedOut, chooseDestination, alreadyDone }
 
 class ScanResult {
-  const ScanResult({required this.outcome, this.classroomName, this.attendance, this.destinations = const []});
+  const ScanResult({required this.outcome, this.classroomName, this.institutionName, this.attendance, this.destinations = const []});
 
   final ScanOutcome outcome;
   final String? classroomName;
+  final String? institutionName;
   final Attendance? attendance;
   final List<DestinationOption> destinations;
 
@@ -70,6 +89,7 @@ class ScanResult {
           _ => ScanOutcome.alreadyDone,
         },
         classroomName: j['classroomName'] as String?,
+        institutionName: j['institutionName'] as String?,
         attendance: j['attendance'] == null ? null : Attendance.fromJson(j['attendance'] as Map<String, dynamic>),
         destinations: (j['destinations'] as List? ?? const [])
             .map((d) => DestinationOption(id: d['id'] as String, name: d['name'] as String, type: d['type'] as String))
@@ -107,22 +127,14 @@ class StudentApi {
         final d = r.data!;
         _token = d['deviceToken'] as String;
         await _storage.write(key: _key, value: _token);
-        return StudentInfo(
-          studentId: (d['student'] as Map)['id'] as String,
-          studentName: (d['student'] as Map)['name'] as String,
-          institutionName: (d['institution'] as Map)['name'] as String,
-        );
+        return StudentInfo.fromJson(d);
       });
 
   Future<StudentHome> me() => _call(() async {
         final r = await _dio.get<Map<String, dynamic>>('me', options: _auth);
         final d = r.data!;
         return StudentHome(
-          info: StudentInfo(
-            studentId: (d['student'] as Map)['id'] as String,
-            studentName: (d['student'] as Map)['name'] as String,
-            institutionName: (d['institution'] as Map)['name'] as String,
-          ),
+          info: StudentInfo.fromJson(d),
           today: (d['today'] as List).map((c) => TodayClass.fromJson(c as Map<String, dynamic>)).toList(),
         );
       });

@@ -27,4 +27,24 @@ void main() {
     });
     expect(e.needsAnswer, true);
   });
+
+  test('아이 하나가 여러 기관 (스펙 7-8)', () {
+    final c = Child.fromJson({
+      'childId': 'c1',
+      'name': '김하늘',
+      'enrollments': [
+        {'studentId': 's1', 'studentName': '김하늘', 'institutionId': 'i1', 'institutionName': '똑똑수학', 'institutionType': 'ACADEMY', 'status': 'ACTIVE'},
+        {'studentId': 's2', 'studentName': '김 하늘', 'institutionId': 'i2', 'institutionName': '한빛초', 'institutionType': 'SCHOOL', 'status': 'ACTIVE'},
+      ],
+    });
+    expect(c.institutionsLabel, '똑똑수학 · 한빛초');
+    expect(c.hasStudent('s2'), isTrue);
+    expect(c.enrollments[1].typeLabel, '학교');
+  });
+
+  test('합치기 후보 키는 순서와 상관없다', () {
+    final a = MergeSuggestion.fromJson({'childIds': ['b', 'a'], 'name': '김하늘', 'institutionNames': ['A', 'B']});
+    final b = MergeSuggestion.fromJson({'childIds': ['a', 'b'], 'name': '김하늘', 'institutionNames': ['A', 'B']});
+    expect(a.key, b.key);
+  });
 }
