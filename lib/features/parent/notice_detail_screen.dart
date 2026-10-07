@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
+import '../../core/widgets/attachment_tile.dart';
 import 'models.dart';
 import 'parent_providers.dart';
 import 'parent_repository.dart';
@@ -59,54 +59,11 @@ class NoticeDetailScreen extends ConsumerWidget {
             SelectableText(n.body, style: const TextStyle(fontSize: 16, height: 1.6)),
             if (n.attachments.isNotEmpty) ...[
               const SizedBox(height: 24),
-              for (final a in n.attachments) _Attachment(a),
+              for (final a in n.attachments) AttachmentTile(a),
             ],
           ],
         ),
       ),
     );
   }
-}
-
-/// 이미지는 바로 보여 주고, PDF 등은 링크 복사 (외부 앱 열기는 url_launcher 추가 시)
-class _Attachment extends StatelessWidget {
-  const _Attachment(this.a);
-  final FileAttachment a;
-
-  @override
-  Widget build(BuildContext context) {
-    final url = a.downloadUrl;
-    if (a.isImage && url != null) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            url,
-            fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => _fileRow(context, url),
-            loadingBuilder: (_, child, p) => p == null ? child : const SizedBox(height: 160, child: Center(child: CircularProgressIndicator())),
-          ),
-        ),
-      );
-    }
-    return _fileRow(context, url);
-  }
-
-  Widget _fileRow(BuildContext context, String? url) => Card(
-        child: ListTile(
-          leading: const Icon(Icons.attach_file),
-          title: Text(a.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(_size(a.size)),
-          trailing: url == null ? null : const Icon(Icons.copy, size: 18),
-          onTap: url == null
-              ? null
-              : () {
-                  Clipboard.setData(ClipboardData(text: url));
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('파일 링크를 복사했습니다 (5분 동안 열 수 있어요)')));
-                },
-        ),
-      );
-
-  static String _size(int n) => n < 1024 * 1024 ? '${(n / 1024).ceil()}KB' : '${(n / 1024 / 1024).toStringAsFixed(1)}MB';
 }

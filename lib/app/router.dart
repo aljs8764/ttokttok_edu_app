@@ -15,7 +15,11 @@ import '../features/student/scan_screen.dart';
 import '../features/student/student_api.dart';
 import '../features/student/student_home_screen.dart';
 import '../features/teacher/class_attendance_screen.dart';
-import '../features/teacher/teacher_home_screen.dart';
+import '../features/teacher/event_detail_screen.dart';
+import '../features/teacher/event_form_screen.dart';
+import '../features/teacher/notice_detail_screen.dart';
+import '../features/teacher/notice_form_screen.dart';
+import '../features/teacher/teacher_shell.dart';
 import 'flavor.dart';
 
 /// 인증 상태가 바뀌면 go_router 가 redirect 를 다시 돌게 하는 다리
@@ -74,11 +78,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/password', builder: (_, __) => const ChangePasswordScreen(forced: true)),
       GoRoute(path: '/institution', builder: (_, __) => const InstitutionSelectScreen()),
       if (teacher) ...[
-        GoRoute(path: '/', builder: (_, __) => const TeacherHomeScreen()),
+        GoRoute(path: '/', builder: (_, __) => const TeacherShell()),
         GoRoute(
           path: '/class/:id',
           builder: (_, s) => ClassAttendanceScreen(classId: s.pathParameters['id']!, className: s.uri.queryParameters['name'] ?? '출결'),
         ),
+        // 알림장 (NTC) — /notices/new 가 /notices/:id 보다 먼저 매칭돼야 한다
+        GoRoute(path: '/notices/new', builder: (_, __) => const NoticeFormScreen()),
+        GoRoute(path: '/notices/:id', builder: (_, s) => TeacherNoticeDetailScreen(id: s.pathParameters['id']!)),
+        GoRoute(path: '/notices/:id/edit', builder: (_, s) => NoticeFormScreen(id: s.pathParameters['id'])),
+        // 행사 (EVT)
+        GoRoute(path: '/events/new', builder: (_, __) => const EventFormScreen()),
+        GoRoute(path: '/events/:id', builder: (_, s) => TeacherEventDetailScreen(id: s.pathParameters['id']!)),
+        GoRoute(path: '/events/:id/edit', builder: (_, s) => EventFormScreen(id: s.pathParameters['id'])),
         GoRoute(path: '/settings/password', builder: (_, __) => const ChangePasswordScreen(forced: false)),
       ] else ...[
         GoRoute(path: '/', builder: (_, __) => const ParentHomeScreen()),
