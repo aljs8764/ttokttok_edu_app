@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
@@ -16,7 +17,7 @@ const _remindCooldown = Duration(minutes: 30);
 enum _Filter { pending, attend, absent, all }
 
 /// EVT-003 응답 집계·명단(미응답 먼저), EVT-004 수동 독촉(30분 간격), 행사 수정·취소.
-/// 명단 엑셀은 관리자 웹에서. 응답이 들어오는 건 당겨서 새로고침으로 확인한다.
+/// 명단 엑셀은 내려받아 공유 시트로 연다. 응답은 개인 큐로 자동 갱신되고 당겨서 새로고침도 된다.
 class TeacherEventDetailScreen extends ConsumerStatefulWidget {
   const TeacherEventDetailScreen({super.key, required this.id});
 
@@ -38,6 +39,18 @@ class _TeacherEventDetailScreenState extends ConsumerState<TeacherEventDetailScr
       final n = await ref.read(contentRepositoryProvider).remindEvent(widget.id);
       invalidateEvents(ref, id: widget.id);
       _toast('미응답 보호자 $n명께 독촉 알림을 보냈습니다');
+    } catch (e) {
+      _toast(errorMessage(e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _exportXlsx(String title) async {
+    setState(() => _busy = true);
+    try {
+      final path = await ref.read(contentRepositoryProvider).downloadEventResponses(widget.id, title);
+      await Share.shareXFiles([XFile(path, mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')], subject: '$title 응답 명단');
     } catch (e) {
       _toast(errorMessage(e));
     } finally {
@@ -131,7 +144,16 @@ class _TeacherEventDetailScreenState extends ConsumerState<TeacherEventDetailScr
                   const Text('참석 현황', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 10),
                   TallyLine(s.tally),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: _busy ? null : () => _exportXlsx(e.title),
+                      icon: const Icon(Icons.download_outlined, size: 18),
+                      label: const Text('명단 엑셀 내보내기'),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
                   FilledButton.icon(
                     onPressed: _busy || !remindable ? null : _remind,
                     icon: const Icon(Icons.notifications_active_outlined, size: 18),

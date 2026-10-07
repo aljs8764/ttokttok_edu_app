@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
@@ -91,6 +92,16 @@ class ContentRepository {
   Future<int> remindEvent(String id) => _call(() async {
         final r = await _dio.post<Map<String, dynamic>>('events/$id/remind');
         return (r.data!['pushRecipients'] as num).toInt();
+      });
+
+  /// 행사 명단 엑셀(학생명·반·응답·사유·응답시각)을 임시 폴더에 내려받아 파일 경로를 돌려준다
+  Future<String> downloadEventResponses(String id, String title) => _call(() async {
+        final r = await _dio.get<List<int>>('events/$id/responses.xlsx', options: Options(responseType: ResponseType.bytes));
+        final safe = title.replaceAll(RegExp(r'[\\/:*?"<>|\s]+'), '_');
+        final dir = await getTemporaryDirectory();
+        final file = File('${dir.path}/${safe.isEmpty ? '행사' : safe}_명단.xlsx');
+        await file.writeAsBytes(r.data!, flush: true);
+        return file.path;
       });
 
   // ───────── 대상 선택·첨부 ─────────
