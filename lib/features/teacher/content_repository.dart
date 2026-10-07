@@ -102,11 +102,13 @@ class ContentRepository {
       });
 
   /// 스펙 8장 파일 흐름: presign → S3 로 직접 PUT → complete. 파일 본문은 API 서버를 거치지 않는다.
-  Future<FileAttachment> uploadNoticeImage(XFile picked) => _call(() async {
-        final file = File(picked.path);
+  Future<FileAttachment> uploadNoticeImage(XFile picked) => uploadNoticeFile(picked.path, picked.name);
+
+  /// 사진·PDF 공통. 형식은 파일 이름 확장자로 판단한다.
+  Future<FileAttachment> uploadNoticeFile(String path, String name) => _call(() async {
+        final file = File(path);
         final size = await file.length();
         if (size > maxFileBytes) throw ApiException(400, 'FILE_TOO_LARGE', '20MB 이하 파일만 올릴 수 있습니다');
-        final name = picked.name;
         final mime = _mimeOf(name);
 
         final presign = await _dio.post<Map<String, dynamic>>('files/presign', data: {
@@ -143,6 +145,7 @@ class ContentRepository {
     final n = name.toLowerCase();
     if (n.endsWith('.png')) return 'image/png';
     if (n.endsWith('.heic')) return 'image/heic';
+    if (n.endsWith('.pdf')) return 'application/pdf';
     return 'image/jpeg';
   }
 
