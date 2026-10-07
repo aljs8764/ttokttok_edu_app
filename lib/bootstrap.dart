@@ -6,6 +6,7 @@ import 'app/app.dart';
 import 'app/flavor.dart';
 import 'core/auth/auth_controller.dart';
 import 'core/providers.dart';
+import 'core/push/push_service.dart';
 import 'features/student/student_api.dart';
 
 /// 세 진입점(main_teacher / main_parent / main_student)의 공통 시작.
@@ -22,7 +23,8 @@ Future<void> bootstrap(Flavor flavor) async {
     await container.read(authControllerProvider.notifier).restore();
   }
 
-  // TODO(push): Firebase 설정 후 FCM 토큰을 PUT /me/devices {flavor, platform, token} 으로 등록
+  // FCM: Firebase 설정 파일이 있으면 켜고, 로그인 상태가 되면 PUT /me/devices 로 기기를 등록한다 (학생앱 제외)
+  await container.read(pushServiceProvider).init();
 
   runApp(UncontrolledProviderScope(container: container, child: const TtokApp()));
 }

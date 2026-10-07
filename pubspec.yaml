@@ -1,10 +1,10 @@
 name: ttokttok_app
-description: 똑똑 교사·학부모 앱 (하나의 코드베이스, flavor 2개)
+description: 똑똑 교사·학부모·학생 앱 (하나의 코드베이스, flavor 3개)
 publish_to: 'none'
 version: 0.1.0+1
 
 environment:
-  sdk: '>=3.7.0 <4.0.0' # Flutter 3.29+ (CardThemeData, Color.withValues)
+  sdk: '>=3.10.0 <4.0.0' # Flutter 3.38.1+ (flutter_local_notifications 22 요구)
 
 dependencies:
   flutter:
@@ -22,6 +22,10 @@ dependencies:
   # 학생앱 QR 출석 (스펙 7-7)
   mobile_scanner: ^7.0.1
   geolocator: ^14.0.2
+  # 푸시 (FCM) — Firebase 설정은 flutterfire configure 로 만든다 (README)
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
+  flutter_local_notifications: ^22.3.1
 
 dev_dependencies:
   flutter_test:

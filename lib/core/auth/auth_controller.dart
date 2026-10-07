@@ -5,6 +5,7 @@ import '../../app/flavor.dart';
 import '../api/api_client.dart';
 import '../api/api_error.dart';
 import '../providers.dart';
+import '../push/push_service.dart';
 import 'models.dart';
 
 enum AuthStatus { loggedOut, loggedIn }
@@ -127,6 +128,8 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
+    // access 토큰이 살아 있을 때 먼저 푸시 기기 해제
+    await ref.read(pushServiceProvider).unregister();
     await _api.logout();
     await _session.clear();
     state = AuthState.loggedOut;

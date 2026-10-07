@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme.dart';
+import '../../core/push/push_service.dart';
 import 'child_selector.dart';
 import 'more_tab.dart';
 import 'notices_tab.dart';
@@ -20,7 +23,7 @@ class ParentHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with WidgetsBindingObserver {
-  int _tab = 0;
+  StreamSubscription<PushPayload>? _pushSub;
 
   static const _titles = ['우리 아이', '알림장', '일정·행사', '더보기'];
 
@@ -28,6 +31,8 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // 앱이 앞에 있을 때 푸시가 오면 해당 목록을 다시 읽는다
+    _pushSub = ref.read(pushServiceProvider).messages.listen(_onPush);
     // 개정 약관 재동의 (필수 약관이 남아 있으면 닫을 수 없다)
     WidgetsBinding.instance.addPostFrameCallback((_) => showTermsGateIfNeeded(context, ref));
   }
@@ -35,7 +40,22 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _pushSub?.cancel();
     super.dispose();
+  }
+
+  void _onPush(PushPayload p) {
+    switch (p.type) {
+      case 'attendance':
+        ref.invalidate(timelineProvider);
+      case 'notice':
+        ref.invalidate(noticesProvider);
+        ref.invalidate(timelineProvider);
+      case 'event':
+        ref.invalidate(eventsProvider);
+      default:
+        break;
+    }
   }
 
   /// 학부모 실시간 소켓은 아직 없다(스펙: /user/queue 는 다음 단계) — 앱이 앞으로 오면 다시 읽는다
@@ -50,21 +70,22 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
 
   @override
   Widget build(BuildContext context) {
+    final tab = ref.watch(parentTabProvider);
     final unread = ref.watch(unreadNoticeCountProvider);
     final pendingRsvp = ref.watch(eventsProvider).valueOrNull?.where((e) => e.needsAnswer).length ?? 0;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titles[_tab]),
-        bottom: _tab < 3 ? const PreferredSize(preferredSize: Size.fromHeight(52), child: ChildSelector()) : null,
+        title: Text(_titles[tab]),
+        bottom: tab < 3 ? const PreferredSize(preferredSize: Size.fromHeight(52), child: ChildSelector()) : null,
       ),
       body: IndexedStack(
-        index: _tab,
+        index: tab,
         children: const [TimelineTab(), NoticesTab(), ScheduleTab(), MoreTab()],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
+        selectedIndex: tab,
+        onDestinationSelected: (i) => ref.read(parentTabProvider.notifier).state = i,
         indicatorColor: AppColors.primary.withValues(alpha: 0.1),
         destinations: [
           const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: '홈'),

@@ -16,6 +16,12 @@ final selectedChildProvider = StateProvider<String?>((ref) {
   return null;
 });
 
+/// 하단 탭 (0 홈 · 1 알림장 · 2 일정 · 3 더보기). 푸시를 눌러 들어오면 해당 탭으로 옮긴다
+final parentTabProvider = StateProvider<int>((ref) {
+  ref.watch(authControllerProvider.select((s) => s.user?.id));
+  return 0;
+});
+
 /// 커서 페이징 목록 공통 (타임라인·알림장함)
 class PagedState<T> {
   const PagedState({this.items = const [], this.loadingMore = false, this.done = false});

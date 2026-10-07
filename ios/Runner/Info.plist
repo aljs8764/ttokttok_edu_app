@@ -70,5 +70,9 @@
 	<string>학원 입구의 QR 코드를 찍어 출석하기 위해 카메라를 사용합니다.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>QR 출석 시 학원 근처에 있는지 확인하기 위해 위치를 사용합니다. 위치는 저장하지 않습니다.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>
