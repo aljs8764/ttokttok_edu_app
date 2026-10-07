@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
@@ -93,6 +94,16 @@ class ContentRepository {
         return (r.data!['pushRecipients'] as num).toInt();
       });
 
+  /// 행사 명단 엑셀(학생명·반·응답·사유·응답시각)을 임시 폴더에 내려받아 파일 경로를 돌려준다
+  Future<String> downloadEventResponses(String id, String title) => _call(() async {
+        final r = await _dio.get<List<int>>('events/$id/responses.xlsx', options: Options(responseType: ResponseType.bytes));
+        final safe = title.replaceAll(RegExp(r'[\\/:*?"<>|\s]+'), '_');
+        final dir = await getTemporaryDirectory();
+        final file = File('${dir.path}/${safe.isEmpty ? '행사' : safe}_명단.xlsx');
+        await file.writeAsBytes(r.data!, flush: true);
+        return file.path;
+      });
+
   // ───────── 대상 선택·첨부 ─────────
 
   /// 이름·보호자 번호 뒷 4자리로 재원생 검색
@@ -102,11 +113,13 @@ class ContentRepository {
       });
 
   /// 스펙 8장 파일 흐름: presign → S3 로 직접 PUT → complete. 파일 본문은 API 서버를 거치지 않는다.
-  Future<FileAttachment> uploadNoticeImage(XFile picked) => _call(() async {
-        final file = File(picked.path);
+  Future<FileAttachment> uploadNoticeImage(XFile picked) => uploadNoticeFile(picked.path, picked.name);
+
+  /// 사진·PDF 공통. 형식은 파일 이름 확장자로 판단한다.
+  Future<FileAttachment> uploadNoticeFile(String path, String name) => _call(() async {
+        final file = File(path);
         final size = await file.length();
         if (size > maxFileBytes) throw ApiException(400, 'FILE_TOO_LARGE', '20MB 이하 파일만 올릴 수 있습니다');
-        final name = picked.name;
         final mime = _mimeOf(name);
 
         final presign = await _dio.post<Map<String, dynamic>>('files/presign', data: {
@@ -143,6 +156,7 @@ class ContentRepository {
     final n = name.toLowerCase();
     if (n.endsWith('.png')) return 'image/png';
     if (n.endsWith('.heic')) return 'image/heic';
+    if (n.endsWith('.pdf')) return 'application/pdf';
     return 'image/jpeg';
   }
 

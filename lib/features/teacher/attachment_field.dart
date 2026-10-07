@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,8 +9,7 @@ import '../../core/widgets/attachment_tile.dart' show fileSizeLabel;
 import '../parent/models.dart' show FileAttachment;
 import 'content_repository.dart';
 
-/// 사진 첨부 (카메라 / 앨범, 최대 [max]개, 20MB). 고르는 즉시 업로드하고 파일 id 만 폼에 남긴다.
-/// PDF 첨부는 관리자 웹에서 (앱은 사진만).
+/// 사진(카메라 / 앨범)·PDF 첨부 (합쳐서 최대 [max]개, 파일당 20MB). 고르는 즉시 업로드하고 파일 id 만 폼에 남긴다.
 class AttachmentField extends ConsumerStatefulWidget {
   const AttachmentField({super.key, required this.value, required this.onChanged, this.max = 10, this.enabled = true});
 
@@ -58,6 +58,31 @@ class _AttachmentFieldState extends ConsumerState<AttachmentField> {
     if (done.isNotEmpty && mounted) widget.onChanged([...widget.value, ...done]);
   }
 
+  Future<void> _pickPdf() async {
+    setState(() => _error = null);
+    final FilePickerResult? res;
+    try {
+      res = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: const ['pdf'], allowMultiple: true);
+    } catch (_) {
+      if (mounted) setState(() => _error = '파일을 불러오지 못했습니다');
+      return;
+    }
+    final files = (res?.files ?? const []).where((f) => f.path != null).take(_remaining).toList();
+    if (files.isEmpty) return;
+
+    setState(() => _uploading = files.length);
+    final done = <FileAttachment>[];
+    for (final f in files) {
+      try {
+        done.add(await ref.read(contentRepositoryProvider).uploadNoticeFile(f.path!, f.name));
+      } catch (e) {
+        if (mounted) setState(() => _error = '${f.name}: ${errorMessage(e)}');
+      }
+      if (mounted) setState(() => _uploading--);
+    }
+    if (done.isNotEmpty && mounted) widget.onChanged([...widget.value, ...done]);
+  }
+
   void _showSources() {
     showModalBottomSheet<void>(
       context: context,
@@ -80,6 +105,14 @@ class _AttachmentFieldState extends ConsumerState<AttachmentField> {
               _pick(ImageSource.gallery);
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.picture_as_pdf_outlined),
+            title: const Text('PDF 파일 고르기'),
+            onTap: () {
+              Navigator.pop(ctx);
+              _pickPdf();
+            },
+          ),
         ]),
       ),
     );
@@ -95,8 +128,8 @@ class _AttachmentFieldState extends ConsumerState<AttachmentField> {
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
             onPressed: canAdd ? _showSources : null,
-            icon: const Icon(Icons.add_a_photo_outlined, size: 18),
-            label: const Text('사진 첨부'),
+            icon: const Icon(Icons.attach_file, size: 18),
+            label: const Text('사진·PDF 첨부'),
           ),
           const SizedBox(width: 12),
           Text('${widget.value.length}/${widget.max}', style: const TextStyle(color: AppColors.textSecondary)),
@@ -107,7 +140,7 @@ class _AttachmentFieldState extends ConsumerState<AttachmentField> {
             child: Wrap(spacing: 8, runSpacing: 4, children: [
               for (final f in widget.value)
                 InputChip(
-                  avatar: const Icon(Icons.image_outlined, size: 18),
+                  avatar: Icon(f.name.toLowerCase().endsWith('.pdf') ? Icons.picture_as_pdf_outlined : Icons.image_outlined, size: 18),
                   label: Text('${f.name} · ${fileSizeLabel(f.size)}', overflow: TextOverflow.ellipsis),
                   onDeleted: widget.enabled ? () => widget.onChanged(widget.value.where((x) => x.id != f.id).toList()) : null,
                 ),

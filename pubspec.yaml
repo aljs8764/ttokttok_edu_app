@@ -24,6 +24,10 @@ dependencies:
   geolocator: ^14.0.2
   # 교사앱 알림장 사진 첨부 (카메라·앨범)
   image_picker: ^1.1.2
+  file_picker: ^10.3.3 # PDF 첨부
+  # 행사 명단 엑셀 내려받기 → 공유 시트
+  path_provider: ^2.1.5
+  share_plus: ^11.0.0
   url_launcher: ^6.3.1
   # 푸시 (FCM) — Firebase 설정은 flutterfire configure 로 만든다 (README)
   firebase_core: ^4.15.0
