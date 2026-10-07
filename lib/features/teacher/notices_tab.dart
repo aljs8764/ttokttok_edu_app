@@ -16,6 +16,7 @@ class TeacherNoticesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notices = ref.watch(noticesProvider);
+    final filter = ref.watch(noticeFilterProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('알림장')),
       floatingActionButton: FloatingActionButton.extended(
@@ -23,7 +24,9 @@ class TeacherNoticesTab extends ConsumerWidget {
         icon: const Icon(Icons.edit_outlined),
         label: const Text('알림장 쓰기'),
       ),
-      body: RefreshIndicator(
+      body: Column(children: [
+        const _FilterBar(),
+        Expanded(child: RefreshIndicator(
         onRefresh: () => ref.refresh(noticesProvider.future),
         child: notices.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -34,11 +37,11 @@ class TeacherNoticesTab extends ConsumerWidget {
           ]),
           data: (s) {
             if (s.items.isEmpty) {
-              return ListView(children: const [
-                SizedBox(height: 120),
-                Icon(Icons.menu_book_outlined, size: 48, color: AppColors.muted),
-                SizedBox(height: 12),
-                Center(child: Text('보낸 알림장이 없습니다', style: TextStyle(color: AppColors.textSecondary))),
+              return ListView(children: [
+                const SizedBox(height: 120),
+                const Icon(Icons.menu_book_outlined, size: 48, color: AppColors.muted),
+                const SizedBox(height: 12),
+                Center(child: Text(filter.isEmpty ? '보낸 알림장이 없습니다' : '조건에 맞는 알림장이 없습니다', style: const TextStyle(color: AppColors.textSecondary))),
               ]);
             }
             return NotificationListener<ScrollNotification>(
@@ -57,7 +60,34 @@ class TeacherNoticesTab extends ConsumerWidget {
             );
           },
         ),
-      ),
+        )),
+      ]),
+    );
+  }
+}
+
+/// 종류·상태 필터 칩. 같은 칩을 다시 누르면 해제.
+class _FilterBar extends ConsumerWidget {
+  const _FilterBar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final f = ref.watch(noticeFilterProvider);
+    final c = ref.read(noticeFilterProvider.notifier);
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Row(children: [
+        for (final k in NoticeKind.values) ...[
+          FilterChip(label: Text(k.label), selected: f.kind == k, onSelected: (on) => c.setKind(on ? k : null)),
+          const SizedBox(width: 6),
+        ],
+        const SizedBox(width: 6),
+        for (final s in NoticeStatus.values) ...[
+          FilterChip(label: Text(s.label), selected: f.status == s, onSelected: (on) => c.setStatus(on ? s : null)),
+          const SizedBox(width: 6),
+        ],
+      ]),
     );
   }
 }

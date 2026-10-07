@@ -21,8 +21,13 @@ class ContentRepository {
 
   // ───────── 알림장 ─────────
 
-  Future<PageOf<TeacherNotice>> notices(int page) => _call(() async {
-        final r = await _dio.get<Map<String, dynamic>>('notices', queryParameters: {'page': page, 'size': 20});
+  Future<PageOf<TeacherNotice>> notices(int page, {NoticeKind? kind, NoticeStatus? status}) => _call(() async {
+        final r = await _dio.get<Map<String, dynamic>>('notices', queryParameters: {
+          'page': page,
+          'size': 20,
+          if (kind != null) 'kind': kind.api,
+          if (status != null) 'status': status.api,
+        });
         return PageOf.fromJson(r.data!, TeacherNotice.fromJson);
       });
 

@@ -22,11 +22,30 @@ class ListState<T> {
 }
 
 /// 알림장 발송 이력 (NTC-004). 기관이 바뀌면 다시 읽는다.
+/// 알림장 목록 필터 (null = 전체). 서버 파라미터 kind·status 로 보낸다.
+class NoticeFilter {
+  const NoticeFilter({this.kind, this.status});
+  final NoticeKind? kind;
+  final NoticeStatus? status;
+  bool get isEmpty => kind == null && status == null;
+}
+
+class NoticeFilterController extends AutoDisposeNotifier<NoticeFilter> {
+  @override
+  NoticeFilter build() => const NoticeFilter();
+
+  void setKind(NoticeKind? k) => state = NoticeFilter(kind: k, status: state.status);
+  void setStatus(NoticeStatus? s) => state = NoticeFilter(kind: state.kind, status: s);
+}
+
+final noticeFilterProvider = NotifierProvider.autoDispose<NoticeFilterController, NoticeFilter>(NoticeFilterController.new);
+
 class NoticeListController extends AutoDisposeAsyncNotifier<ListState<TeacherNotice>> {
   @override
   Future<ListState<TeacherNotice>> build() async {
     ref.watch(authControllerProvider.select((s) => s.institutionId));
-    final p = await ref.read(contentRepositoryProvider).notices(0);
+    final f = ref.watch(noticeFilterProvider);
+    final p = await ref.read(contentRepositoryProvider).notices(0, kind: f.kind, status: f.status);
     return ListState(items: p.items, page: 0, hasMore: p.hasMore);
   }
 
@@ -35,7 +54,8 @@ class NoticeListController extends AutoDisposeAsyncNotifier<ListState<TeacherNot
     if (s == null || !s.hasMore || s.loadingMore) return;
     state = AsyncData(s.copyWith(loadingMore: true));
     try {
-      final p = await ref.read(contentRepositoryProvider).notices(s.page + 1);
+      final f = ref.read(noticeFilterProvider);
+      final p = await ref.read(contentRepositoryProvider).notices(s.page + 1, kind: f.kind, status: f.status);
       state = AsyncData(s.copyWith(items: [...s.items, ...p.items], page: s.page + 1, hasMore: p.hasMore, loadingMore: false));
     } catch (_) {
       // 다음 스크롤 때 다시 시도

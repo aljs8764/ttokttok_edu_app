@@ -83,6 +83,12 @@ enum NoticeStatus {
   sent,
   canceled;
 
+  String get api => switch (this) {
+        NoticeStatus.scheduled => 'SCHEDULED',
+        NoticeStatus.sent => 'SENT',
+        NoticeStatus.canceled => 'CANCELED',
+      };
+
   static NoticeStatus parse(String v) => switch (v) {
         'SENT' => NoticeStatus.sent,
         'CANCELED' => NoticeStatus.canceled,

@@ -17,6 +17,7 @@ import '../providers.dart';
 ///  - {type: attendance, studentId, status, occurredAt}  등·하원 (학생앱 QR 포함)
 ///  - {type: notice, noticeId, kind}                      알림장·공지·재발송
 ///  - {type: event, eventId, kind}                        행사 등록·독촉·변경·취소
+/// 교사앱은 같은 type 으로 작성자 안내를 받는다 (예약 알림장 발송 완료 = notice, 행사 자동 독촉 결과 = event)
 class PushPayload {
   const PushPayload(this.data);
 
