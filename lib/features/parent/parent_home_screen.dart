@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme.dart';
 import '../../core/push/push_service.dart';
+import '../../core/realtime/stomp_service.dart';
 import 'child_selector.dart';
 import 'more_tab.dart';
 import 'notices_tab.dart';
@@ -24,6 +25,9 @@ class ParentHomeScreen extends ConsumerStatefulWidget {
 
 class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with WidgetsBindingObserver {
   StreamSubscription<PushPayload>? _pushSub;
+  StreamSubscription<Map<String, dynamic>>? _userSub;
+  Timer? _refreshDebounce;
+  final _dirty = <String>{};
 
   static const _titles = ['우리 아이', '알림장', '일정·행사', '더보기'];
 
@@ -33,6 +37,8 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
     WidgetsBinding.instance.addObserver(this);
     // 앱이 앞에 있을 때 푸시가 오면 해당 목록을 다시 읽는다
     _pushSub = ref.read(pushServiceProvider).messages.listen(_onPush);
+    // 앱이 켜져 있는 동안엔 개인 큐(/user/queue/events)로 출결·알림장·행사 변화를 바로 받는다
+    _userSub = ref.read(stompServiceProvider).watch('/user/queue/events').listen(_onRealtime);
     // 개정 약관 재동의 (필수 약관이 남아 있으면 닫을 수 없다)
     WidgetsBinding.instance.addPostFrameCallback((_) => showTermsGateIfNeeded(context, ref));
   }
@@ -41,6 +47,8 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _pushSub?.cancel();
+    _userSub?.cancel();
+    _refreshDebounce?.cancel();
     super.dispose();
   }
 
@@ -58,7 +66,23 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
     }
   }
 
-  /// 학부모 실시간 소켓은 아직 없다(스펙: /user/queue 는 다음 단계) — 앱이 앞으로 오면 다시 읽는다
+  void _onRealtime(Map<String, dynamic> m) {
+    final type = m['type'];
+    if (type is! String) return;
+    _dirty.add(type.split('.').first); // attendance · notice · event
+    // 푸시와 소켓이 함께 오거나 여러 건이 몰려도 한 번만 다시 읽는다
+    _refreshDebounce?.cancel();
+    _refreshDebounce = Timer(const Duration(milliseconds: 600), () {
+      if (!mounted) return;
+      final kinds = _dirty.toList();
+      _dirty.clear();
+      for (final k in kinds) {
+        _onPush(PushPayload({'type': k}));
+      }
+    });
+  }
+
+  /// 소켓이 끊겨 있던 사이 변화는 못 받으므로 — 앱이 앞으로 오면 다시 읽는다
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
