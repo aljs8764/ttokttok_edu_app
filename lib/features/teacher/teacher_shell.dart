@@ -1,20 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'attendance_queue.dart';
 import 'events_tab.dart';
 import 'notices_tab.dart';
 import 'teacher_home_screen.dart';
 
 /// 교사앱 하단 탭 — 출결(반 목록) · 알림장 · 행사. 탭은 처음 열 때 만든다 (시작할 때 불필요한 조회를 줄이려고).
-class TeacherShell extends StatefulWidget {
+class TeacherShell extends ConsumerStatefulWidget {
   const TeacherShell({super.key});
 
   @override
-  State<TeacherShell> createState() => _TeacherShellState();
+  ConsumerState<TeacherShell> createState() => _TeacherShellState();
 }
 
-class _TeacherShellState extends State<TeacherShell> {
+class _TeacherShellState extends ConsumerState<TeacherShell> {
   int _index = 0;
   final _visited = <int>{0};
+
+  @override
+  void initState() {
+    super.initState();
+    // 지난번에 못 보낸 오프라인 큐가 있으면 읽어서 보낸다
+    Future.microtask(() => ref.read(attendanceQueueProvider.notifier).start());
+  }
 
   static const _tabs = <Widget>[TeacherHomeScreen(), TeacherNoticesTab(), TeacherEventsTab()];
 

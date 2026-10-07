@@ -7,6 +7,7 @@ import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
 import '../../core/realtime/stomp_service.dart';
 import '../../core/widgets/status_badge.dart';
+import 'attendance_queue.dart';
 import 'models.dart';
 import 'sheets.dart';
 import 'teacher_providers.dart';
@@ -48,7 +49,15 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _loadedDay = DateTime.now();
-      _ctrl.reload();
+      // 밀린 오프라인 큐를 먼저 보내고(성공하면 서버 값으로 다시 읽힘), 아니면 그냥 다시 읽는다
+      final queue = ref.read(attendanceQueueProvider.notifier);
+      if (ref.read(attendanceQueueProvider).isNotEmpty) {
+        queue.flush().then((sent) {
+          if (sent == 0 && mounted) _ctrl.reload();
+        });
+      } else {
+        _ctrl.reload();
+      }
     }
   }
 
@@ -78,6 +87,12 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
     }
   }
 
+  Future<void> _flushNow() async {
+    final sent = await ref.read(attendanceQueueProvider.notifier).flush();
+    if (!mounted) return;
+    _toast(sent > 0 ? '$sent건을 보냈습니다' : '아직 보내지 못했습니다. 네트워크를 확인하세요');
+  }
+
   Future<void> _manual(Attendance a) async {
     if (a.dayId == null) {
       _toast('오늘 출결 기록이 아직 없어 바꿀 수 없습니다. 등원을 먼저 눌러 주세요');
@@ -99,6 +114,14 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
       final m = next.valueOrNull;
       if (m != null) _ctrl.applyRealtime(m);
     });
+
+    // 오프라인 큐에서 서버가 거절한 항목 안내
+    ref.listen(queueFailuresProvider, (_, next) {
+      if (next.isEmpty) return;
+      _toast('전송하지 못한 항목: ${next.join(' / ')}', error: true);
+      Future.microtask(() => ref.read(queueFailuresProvider.notifier).state = const []);
+    });
+    final queued = ref.watch(attendanceQueueProvider).where((q) => q.classroomId == widget.classId).length;
 
     // 자정을 넘겨 화면을 켜 두었으면 새 날짜로
     if (!DateUtils.isSameDay(_loadedDay, DateTime.now())) {
@@ -137,6 +160,7 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
             onRefresh: _ctrl.reload,
             child: CustomScrollView(
               slivers: [
+                if (queued > 0) SliverToBoxAdapter(child: _QueueBanner(count: queued, onFlush: _flushNow)),
                 SliverToBoxAdapter(child: _Summary(counts: counts)),
                 SliverToBoxAdapter(child: _FilterBar(value: _filter, counts: counts, onChanged: (f) => setState(() => _filter = f))),
                 if (list.isEmpty)
@@ -173,6 +197,26 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
         _Filter.out => a.status == AttendanceStatus.out,
         _Filter.absent => a.status == AttendanceStatus.absent,
       };
+}
+
+/// 오프라인 큐에 쌓인 건이 있을 때 — 자동 전송을 기다리거나 바로 보내 본다
+class _QueueBanner extends StatelessWidget {
+  const _QueueBanner({required this.count, required this.onFlush});
+  final int count;
+  final VoidCallback onFlush;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        padding: const EdgeInsets.fromLTRB(14, 6, 6, 6),
+        decoration: BoxDecoration(color: AppColors.warning.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+        child: Row(children: [
+          const Icon(Icons.cloud_off, size: 18, color: AppColors.warning),
+          const SizedBox(width: 8),
+          Expanded(child: Text('전송 대기 $count건 · 연결되면 자동으로 보냅니다', style: const TextStyle(fontSize: 13))),
+          TextButton(onPressed: onFlush, child: const Text('지금 보내기')),
+        ]),
+      );
 }
 
 class _Counts {
@@ -263,6 +307,7 @@ class _StudentRow extends StatelessWidget {
     if (a.checkInAt != null) parts.add('등원 ${_hm.format(a.checkInAt!)}');
     if (a.checkOutAt != null) parts.add('하원 ${_hm.format(a.checkOutAt!)}');
     if (a.nextDestinationName != null && a.status == AttendanceStatus.out) parts.add('→ ${a.nextDestinationName}');
+    if (a.queued) parts.add('전송 대기');
     if (a.status == AttendanceStatus.absent && a.absenceReason != null) parts.add(a.absenceReason!);
     return parts.join(' · ');
   }
@@ -299,6 +344,10 @@ class _StudentRow extends StatelessWidget {
                       Flexible(child: Text(a.studentName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis)),
                       const SizedBox(width: 8),
                       StatusBadge(a.status, isLate: a.isLate, isEarlyLeave: a.isEarlyLeave),
+                      if (a.queued) ...[
+                        const SizedBox(width: 8),
+                        const Icon(Icons.cloud_off, size: 14, color: AppColors.warning),
+                      ],
                       if (a.pending) ...[
                         const SizedBox(width: 8),
                         const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 1.5)),

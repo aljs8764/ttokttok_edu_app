@@ -76,6 +76,7 @@ class Attendance {
     this.nextDestinationName,
     this.absenceReason,
     this.pending = false,
+    this.queued = false,
   });
 
   final String studentId;
@@ -92,6 +93,9 @@ class Attendance {
 
   /// 낙관적 업데이트 후 서버 응답 대기 중
   final bool pending;
+
+  /// 네트워크가 없어 오프라인 큐에 쌓인 상태 (연결되면 자동 전송)
+  final bool queued;
 
   factory Attendance.fromJson(Map<String, dynamic> j) => Attendance(
         studentId: j['studentId'] as String,
@@ -135,6 +139,22 @@ class Attendance {
         nextDestinationName: destinationName ?? nextDestinationName,
         absenceReason: absenceReason,
         pending: true,
+      );
+
+  /// 전송 대기 표시로 바꾼다 (낙관적 값은 유지, 응답 대기 스피너는 끈다)
+  Attendance asQueued() => Attendance(
+        studentId: studentId,
+        studentName: studentName,
+        classroomId: classroomId,
+        status: status,
+        isLate: isLate,
+        isEarlyLeave: isEarlyLeave,
+        dayId: dayId,
+        checkInAt: checkInAt,
+        checkOutAt: checkOutAt,
+        nextDestinationName: nextDestinationName,
+        absenceReason: absenceReason,
+        queued: true,
       );
 
   static DateTime? _time(Object? v) => v == null ? null : DateTime.parse(v as String).toLocal();
