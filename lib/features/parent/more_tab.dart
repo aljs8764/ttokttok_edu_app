@@ -70,6 +70,13 @@ class MoreTab extends ConsumerWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/albums'),
             ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.receipt_long_outlined),
+              title: const Text('납부 내역'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/invoices'),
+            ),
           ]),
         ),
         const SizedBox(height: 12),

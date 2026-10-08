@@ -15,7 +15,7 @@ import 'router.dart';
 ///  - notice → 알림장 상세(수신 확인)
 ///  - event  → 행사 상세
 ///  - chat   → 대화 화면, absence_request → 결석·지각 신청 목록
-/// 학부모앱 추가: chat → 대화, survey → 설문 목록, album → 앨범 상세, absence_request → 신청 목록
+/// 학부모앱 추가: chat → 대화, survey → 설문 목록, album → 앨범 상세, absence_request → 신청 목록, invoice → 납부 내역
 void openFromPush(WidgetRef ref, PushPayload p) {
   if (!ref.read(authControllerProvider).loggedIn) return;
   final router = ref.read(routerProvider);
@@ -58,6 +58,9 @@ void openFromPush(WidgetRef ref, PushPayload p) {
     case 'absence_request':
       router.go('/');
       router.push('/absence');
+    case 'invoice':
+      router.go('/');
+      router.push('/invoices');
     case 'attendance':
       tab.state = 0;
       final studentId = p.data['studentId'];

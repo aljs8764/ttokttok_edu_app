@@ -9,6 +9,7 @@ import '../../core/realtime/stomp_service.dart';
 import 'child_selector.dart';
 import 'more_tab.dart';
 import 'notices_tab.dart';
+import '../comm/billing_screens.dart';
 import '../comm/comm_repository.dart';
 import 'parent_providers.dart';
 import 'schedule_tab.dart';
@@ -71,6 +72,8 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
       case 'absence':
       case 'absence_request':
         ref.invalidate(myAbsenceRequestsProvider);
+      case 'invoice':
+        ref.invalidate(myInvoicesProvider);
       default:
         break;
     }

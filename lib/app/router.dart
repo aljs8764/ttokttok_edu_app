@@ -10,6 +10,7 @@ import '../features/auth/login_screen.dart';
 import '../features/auth/parent_signup_screen.dart';
 import '../features/comm/absence_screens.dart';
 import '../features/comm/album_screens.dart';
+import '../features/comm/billing_screens.dart';
 import '../features/comm/chat_screens.dart';
 import '../features/comm/survey_screens.dart';
 import '../features/parent/notice_detail_screen.dart';
@@ -125,6 +126,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         GoRoute(path: '/absence', builder: (_, __) => const ParentAbsenceScreen()),
         GoRoute(path: '/surveys', builder: (_, __) => const SurveyListScreen()),
         GoRoute(path: '/albums', builder: (_, __) => const AlbumListScreen()),
+        GoRoute(path: '/invoices', builder: (_, __) => const InvoiceListScreen()),
         GoRoute(path: '/albums/:id', builder: (_, s) => AlbumDetailScreen(id: s.pathParameters['id']!)),
         GoRoute(path: '/settings/password', builder: (_, __) => const ChangePasswordScreen(forced: false)),
       ],
