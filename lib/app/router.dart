@@ -23,6 +23,7 @@ import '../features/teacher/event_detail_screen.dart';
 import '../features/teacher/event_form_screen.dart';
 import '../features/teacher/notice_detail_screen.dart';
 import '../features/teacher/notice_form_screen.dart';
+import '../features/teacher/ops_screens.dart';
 import '../features/teacher/teacher_shell.dart';
 import 'flavor.dart';
 
@@ -105,6 +106,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ),
         GoRoute(path: '/absence', builder: (_, __) => const StaffAbsenceScreen()),
+        GoRoute(path: '/staff-attendance', builder: (_, __) => const StaffCheckInScreen()),
         GoRoute(path: '/settings/password', builder: (_, __) => const ChangePasswordScreen(forced: false)),
       ] else ...[
         GoRoute(path: '/', builder: (_, __) => const ParentHomeScreen()),

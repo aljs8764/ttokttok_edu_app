@@ -9,6 +9,7 @@ import '../../core/realtime/stomp_service.dart';
 import '../../core/widgets/status_badge.dart';
 import 'attendance_queue.dart';
 import 'models.dart';
+import 'ops_screens.dart';
 import 'sheets.dart';
 import 'teacher_providers.dart';
 
@@ -161,6 +162,7 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
             child: CustomScrollView(
               slivers: [
                 if (queued > 0) SliverToBoxAdapter(child: _QueueBanner(count: queued, onFlush: _flushNow)),
+                SliverToBoxAdapter(child: HealthAlertBanner(classId: widget.classId)),
                 SliverToBoxAdapter(child: _Summary(counts: counts)),
                 SliverToBoxAdapter(child: _FilterBar(value: _filter, counts: counts, onChanged: (f) => setState(() => _filter = f))),
                 if (list.isEmpty)
