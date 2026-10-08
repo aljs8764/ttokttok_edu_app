@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
 import '../../core/widgets/attachment_tile.dart';
+import '../comm/comm_repository.dart';
 import 'models.dart';
 import 'parent_providers.dart';
 import 'parent_repository.dart';
@@ -60,6 +62,21 @@ class NoticeDetailScreen extends ConsumerWidget {
             if (n.attachments.isNotEmpty) ...[
               const SizedBox(height: 24),
               for (final a in n.attachments) AttachmentTile(a),
+            ],
+            if (n.studentIds.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.reply),
+                label: const Text('선생님께 회신'),
+                onPressed: () async {
+                  try {
+                    final c = await ref.read(commRepositoryProvider).openAsParent(n.studentIds.first, noticeId: n.id);
+                    if (context.mounted) context.push('/chat/${c.id}?title=${Uri.encodeComponent(n.title)}&staff=false');
+                  } catch (e) {
+                    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(e))));
+                  }
+                },
+              ),
             ],
           ],
         ),

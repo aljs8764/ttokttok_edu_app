@@ -8,6 +8,10 @@ import '../features/auth/change_password_screen.dart';
 import '../features/auth/institution_select_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/parent_signup_screen.dart';
+import '../features/comm/absence_screens.dart';
+import '../features/comm/album_screens.dart';
+import '../features/comm/chat_screens.dart';
+import '../features/comm/survey_screens.dart';
 import '../features/parent/notice_detail_screen.dart';
 import '../features/parent/parent_home_screen.dart';
 import '../features/student/link_screen.dart';
@@ -91,11 +95,35 @@ final routerProvider = Provider<GoRouter>((ref) {
         GoRoute(path: '/events/new', builder: (_, __) => const EventFormScreen()),
         GoRoute(path: '/events/:id', builder: (_, s) => TeacherEventDetailScreen(id: s.pathParameters['id']!)),
         GoRoute(path: '/events/:id/edit', builder: (_, s) => EventFormScreen(id: s.pathParameters['id'])),
+        // 소통 (NTC-007·008, ATT-007)
+        GoRoute(
+          path: '/chat/:id',
+          builder: (_, s) => ChatThreadScreen(
+            id: s.pathParameters['id']!,
+            title: s.uri.queryParameters['title'] ?? '메시지',
+            staff: s.uri.queryParameters['staff'] == 'true',
+          ),
+        ),
+        GoRoute(path: '/absence', builder: (_, __) => const StaffAbsenceScreen()),
         GoRoute(path: '/settings/password', builder: (_, __) => const ChangePasswordScreen(forced: false)),
       ] else ...[
         GoRoute(path: '/', builder: (_, __) => const ParentHomeScreen()),
         GoRoute(path: '/signup', builder: (_, __) => const ParentSignupScreen()),
         GoRoute(path: '/notices/:id', builder: (_, s) => NoticeDetailScreen(id: s.pathParameters['id']!)),
+        // 소통 (NTC-007·008·010·011, ATT-007)
+        GoRoute(path: '/chat', builder: (_, __) => const ChatListScreen(staff: false)),
+        GoRoute(
+          path: '/chat/:id',
+          builder: (_, s) => ChatThreadScreen(
+            id: s.pathParameters['id']!,
+            title: s.uri.queryParameters['title'] ?? '메시지',
+            staff: s.uri.queryParameters['staff'] == 'true',
+          ),
+        ),
+        GoRoute(path: '/absence', builder: (_, __) => const ParentAbsenceScreen()),
+        GoRoute(path: '/surveys', builder: (_, __) => const SurveyListScreen()),
+        GoRoute(path: '/albums', builder: (_, __) => const AlbumListScreen()),
+        GoRoute(path: '/albums/:id', builder: (_, s) => AlbumDetailScreen(id: s.pathParameters['id']!)),
         GoRoute(path: '/settings/password', builder: (_, __) => const ChangePasswordScreen(forced: false)),
       ],
     ],

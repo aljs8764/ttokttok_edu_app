@@ -5,13 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/push/push_service.dart';
 import '../../core/realtime/stomp_service.dart';
+import '../comm/absence_screens.dart';
+import '../comm/chat_screens.dart';
+import '../comm/comm_repository.dart';
 import 'attendance_queue.dart';
 import 'content_providers.dart';
 import 'events_tab.dart';
 import 'notices_tab.dart';
 import 'teacher_home_screen.dart';
 
-/// 교사앱 하단 탭 — 출결(반 목록) · 알림장 · 행사. 탭은 처음 열 때 만든다 (시작할 때 불필요한 조회를 줄이려고).
+/// 교사앱 하단 탭 — 출결(반 목록) · 알림장 · 행사 · 메시지 · 결석·지각 신청. 탭은 처음 열 때 만든다 (시작할 때 불필요한 조회를 줄이려고).
 class TeacherShell extends ConsumerStatefulWidget {
   const TeacherShell({super.key});
 
@@ -53,12 +56,16 @@ class _TeacherShellState extends ConsumerState<TeacherShell> {
       _markDirty(notice: m['noticeId'] as String?);
     } else if (type == 'event.responded') {
       _markDirty(event: m['eventId'] as String?);
+    } else if (type == 'absence.requested') {
+      ref.invalidate(staffAbsenceRequestsProvider);
     }
   }
 
   void _onPush(PushPayload p) {
     if (p.type == 'notice') _markDirty(notice: p.data['noticeId']);
     if (p.type == 'event') _markDirty(event: p.data['eventId']);
+    if (p.type == 'chat') ref.invalidate(conversationsProvider(true));
+    if (p.type == 'absence_request') ref.invalidate(staffAbsenceRequestsProvider);
   }
 
   /// 수신 확인이 몰려올 수 있어 0.8초 모아서 한 번에 다시 읽는다
@@ -88,7 +95,7 @@ class _TeacherShellState extends ConsumerState<TeacherShell> {
     });
   }
 
-  static const _tabs = <Widget>[TeacherHomeScreen(), TeacherNoticesTab(), TeacherEventsTab()];
+  static const _tabs = <Widget>[TeacherHomeScreen(), TeacherNoticesTab(), TeacherEventsTab(), ChatListScreen(staff: true), StaffAbsenceScreen()];
 
   @override
   Widget build(BuildContext context) {
@@ -107,6 +114,8 @@ class _TeacherShellState extends ConsumerState<TeacherShell> {
           NavigationDestination(icon: Icon(Icons.fact_check_outlined), selectedIcon: Icon(Icons.fact_check), label: '출결'),
           NavigationDestination(icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book), label: '알림장'),
           NavigationDestination(icon: Icon(Icons.event_outlined), selectedIcon: Icon(Icons.event), label: '행사'),
+          NavigationDestination(icon: Icon(Icons.chat_bubble_outline), selectedIcon: Icon(Icons.chat_bubble), label: '메시지'),
+          NavigationDestination(icon: Icon(Icons.event_busy_outlined), selectedIcon: Icon(Icons.event_busy), label: '신청'),
         ],
       ),
     );

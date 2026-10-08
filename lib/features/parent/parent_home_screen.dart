@@ -9,6 +9,7 @@ import '../../core/realtime/stomp_service.dart';
 import 'child_selector.dart';
 import 'more_tab.dart';
 import 'notices_tab.dart';
+import '../comm/comm_repository.dart';
 import 'parent_providers.dart';
 import 'schedule_tab.dart';
 import 'terms_gate.dart';
@@ -61,6 +62,15 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
         ref.invalidate(timelineProvider);
       case 'event':
         ref.invalidate(eventsProvider);
+      case 'chat':
+        ref.invalidate(conversationsProvider(false));
+      case 'survey':
+        ref.invalidate(surveysProvider);
+      case 'album':
+        ref.invalidate(albumsProvider);
+      case 'absence':
+      case 'absence_request':
+        ref.invalidate(myAbsenceRequestsProvider);
       default:
         break;
     }

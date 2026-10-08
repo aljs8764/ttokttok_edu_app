@@ -165,6 +165,7 @@ class ParentNotice {
     required this.body,
     required this.pinned,
     required this.children,
+    required this.studentIds,
     required this.authorName,
     required this.attachments,
     this.sentAt,
@@ -180,6 +181,9 @@ class ParentNotice {
   final String body;
   final bool pinned;
   final List<String> children;
+
+  /// 대상 자녀의 원생 id (알림장 회신 대화를 열 때 쓴다)
+  final List<String> studentIds;
   final String authorName;
   final List<FileAttachment> attachments;
   final DateTime? sentAt;
@@ -196,6 +200,7 @@ class ParentNotice {
         body: j['body'] as String,
         pinned: j['pinned'] as bool? ?? false,
         children: (j['children'] as List).map((c) => (c as Map)['name'] as String).toList(),
+        studentIds: (j['children'] as List).map((c) => (c as Map)['studentId'] as String).toList(),
         authorName: j['authorName'] as String? ?? '',
         attachments: (j['attachments'] as List? ?? const []).map((a) => FileAttachment.fromJson(a as Map<String, dynamic>)).toList(),
         sentAt: _t(j['sentAt']),
@@ -210,6 +215,7 @@ class ParentNotice {
         body: body,
         pinned: pinned,
         children: children,
+        studentIds: studentIds,
         authorName: authorName,
         attachments: attachments,
         sentAt: sentAt,

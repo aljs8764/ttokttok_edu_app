@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
 import '../../core/auth/auth_controller.dart';
+import '../comm/location_consent_tile.dart';
 import 'merge_banner.dart';
 import 'models.dart';
 import 'parent_providers.dart';
@@ -40,6 +41,38 @@ class MoreTab extends ConsumerWidget {
               : [for (final c in list) _ChildCard(child: c)],
         ),
         const SizedBox(height: 24),
+        Card(
+          child: Column(children: [
+            ListTile(
+              leading: const Icon(Icons.chat_bubble_outline),
+              title: const Text('메시지'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/chat'),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.event_busy_outlined),
+              title: const Text('결석·지각 신청'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/absence'),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.poll_outlined),
+              title: const Text('설문'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/surveys'),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('앨범'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/albums'),
+            ),
+          ]),
+        ),
+        const SizedBox(height: 12),
         Card(
           child: Column(children: [
             ListTile(
@@ -155,6 +188,7 @@ class _ChildCard extends ConsumerWidget {
                       )
                     : null,
               ),
+            LocationConsentTile(childId: child.childId),
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
