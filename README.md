@@ -107,6 +107,22 @@ flutterfire configure --project=<firebase 프로젝트 id> --platforms=android,i
 - 알림을 누르면: 알림장 → 알림장 탭 + 상세(열람 처리) · 행사 → 일정 탭 · 등·하원 → 홈 + 해당 자녀 선택. 앱이 꺼져 있었어도 첫 화면 뒤 이동.
 - 학생앱은 계정이 없어 푸시를 받지 않는다. 교사앱은 기기만 등록해 둔다 (교사용 푸시는 아직 서버에 없음).
 
+## 소셜 로그인 (AUTH-006) · 2단계 인증 (AUTH-007) · 튜토리얼 (ONB-004)
+
+카카오·네이버 키가 없으면 로그인 화면에 버튼이 나오지 않는다(서버 `KAKAO_LOGIN_ENABLED`·`NAVER_LOGIN_ENABLED` 도 켜야 보인다).
+
+1. 카카오 개발자센터: 앱 생성 → 네이티브 앱 키, 플랫폼(Android 패키지 `app.ttok.ttokttok_app` + 키 해시, iOS 번들 ID) 등록, 카카오 로그인 활성화, 동의 항목(닉네임·이메일·전화번호)
+2. 네이버 개발자센터: 애플리케이션 등록 → Client ID/Secret, 서비스 환경(Android·iOS) 등록, 제공 정보(이름·이메일·휴대전화번호)
+3. 실행 시 Dart 쪽 키: `flutter run --flavor ... --dart-define=KAKAO_NATIVE_APP_KEY=<키> --dart-define=NAVER_LOGIN=true`
+4. 안드로이드 네이티브 키: `~/.gradle/gradle.properties` 에 `KAKAO_NATIVE_APP_KEY=`, `NAVER_CLIENT_ID=`, `NAVER_CLIENT_SECRET=` (저장소에 커밋하지 않는다)
+5. iOS 네이티브 키: `ios/Flutter/Social.xcconfig`(gitignore) 에 `KAKAO_NATIVE_APP_KEY=`, `NAVER_URL_SCHEME=`, `NAVER_CLIENT_ID=`, `NAVER_CLIENT_SECRET=`
+6. iOS 미완: 앱이 UIScene 구조라 네이버 로그인 후 돌아오는 URL 을 `SceneDelegate` 에서 `NidOAuth.shared.handleURL(url)` 로 넘겨야 한다(카카오 SDK 의 UIScene 처리도 실기기 확인 필요). 실기기에서 확인하며 추가할 것
+
+- 소셜 계정으로 처음 온 학부모는 이름·휴대폰·약관 확인 후 가입된다(등록된 보호자 번호면 자녀 자동 연결). 이미 같은 번호로 가입돼 있으면 비밀번호로 로그인한 뒤 더보기 > 간편 로그인 연결에서 연결한다.
+- 선생님은 소셜로 가입할 수 없다(원장 초대 계정). 이메일 로그인 후 메뉴 > 간편 로그인 연결.
+- 2단계 인증을 켠 계정은 로그인 후 인증 코드 입력 창이 뜬다(켜고 끄는 것은 관리자 웹 설정 > 보안).
+- 교사앱 첫 실행 때 원터치 출결 3단계 안내가 한 번 뜬다. 다시 보기: 메뉴 > 출결 사용법 보기.
+
 ## 아직 안 한 것
 
 - 학생앱 스토어 분리 빌드(별도 패키지명·아이콘) — 지금은 진입점만 다르다

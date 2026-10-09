@@ -25,6 +25,16 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // AUTH-006 소셜 로그인 키 — ~/.gradle/gradle.properties(사용자 홈, 커밋되지 않음) 또는 -P 로 넣는다. 없으면 앱이 버튼을 숨긴다
+        manifestPlaceholders["kakaoNativeAppKey"] = (project.findProperty("KAKAO_NATIVE_APP_KEY") as String?) ?: "none"
+        resValue("string", "naver_client_id", (project.findProperty("NAVER_CLIENT_ID") as String?) ?: "none")
+        resValue("string", "naver_client_secret", (project.findProperty("NAVER_CLIENT_SECRET") as String?) ?: "none")
+        resValue("string", "naver_client_name", "ttokttok")
+    }
+
+    buildFeatures {
+        resValues = true
     }
 
     buildTypes {

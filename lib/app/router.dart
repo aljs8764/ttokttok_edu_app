@@ -8,6 +8,7 @@ import '../features/auth/change_password_screen.dart';
 import '../features/auth/institution_select_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/parent_signup_screen.dart';
+import '../features/auth/social_screens.dart';
 import '../features/comm/absence_screens.dart';
 import '../features/comm/album_screens.dart';
 import '../features/comm/billing_screens.dart';
@@ -110,6 +111,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         GoRoute(path: '/absence', builder: (_, __) => const StaffAbsenceScreen()),
         GoRoute(path: '/staff-attendance', builder: (_, __) => const StaffCheckInScreen()),
         GoRoute(path: '/shuttle-drive', builder: (_, __) => const ShuttleDriveScreen()),
+        GoRoute(path: '/settings/social', builder: (_, __) => const SocialLinkScreen()),
         GoRoute(path: '/settings/password', builder: (_, __) => const ChangePasswordScreen(forced: false)),
       ] else ...[
         GoRoute(path: '/', builder: (_, __) => const ParentHomeScreen()),
@@ -130,6 +132,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         GoRoute(path: '/albums', builder: (_, __) => const AlbumListScreen()),
         GoRoute(path: '/invoices', builder: (_, __) => const InvoiceListScreen()),
         GoRoute(path: '/shuttle', builder: (_, __) => const MyShuttleScreen()),
+        GoRoute(path: '/settings/social', builder: (_, __) => const SocialLinkScreen()),
         GoRoute(path: '/albums/:id', builder: (_, s) => AlbumDetailScreen(id: s.pathParameters['id']!)),
         GoRoute(path: '/settings/password', builder: (_, __) => const ChangePasswordScreen(forced: false)),
       ],

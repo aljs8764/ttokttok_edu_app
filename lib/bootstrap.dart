@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'app/app.dart';
 import 'app/flavor.dart';
 import 'core/auth/auth_controller.dart';
+import 'core/auth/social_sdk.dart';
 import 'core/providers.dart';
 import 'core/push/push_service.dart';
 import 'features/student/student_api.dart';
@@ -14,6 +15,7 @@ import 'features/student/student_api.dart';
 Future<void> bootstrap(Flavor flavor) async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ko_KR');
+  initSocialSdks();
 
   final container = ProviderContainer(overrides: [appConfigProvider.overrideWithValue(AppConfig(flavor))]);
   if (flavor == Flavor.student) {

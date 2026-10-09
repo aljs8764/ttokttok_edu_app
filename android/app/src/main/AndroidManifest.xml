@@ -43,6 +43,21 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- AUTH-006 카카오 로그인 (카카오계정 웹 로그인 후 앱으로 돌아오기) -->
+        <activity
+            android:name="com.kakao.sdk.flutter.AuthCodeCustomTabsActivity"
+            android:exported="true">
+            <intent-filter android:label="flutter_web_auth">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kakao${kakaoNativeAppKey}" android:host="oauth" />
+            </intent-filter>
+        </activity>
+        <!-- AUTH-006 네이버 로그인 -->
+        <meta-data android:name="com.naver.sdk.clientId" android:value="@string/naver_client_id" />
+        <meta-data android:name="com.naver.sdk.clientSecret" android:value="@string/naver_client_secret" />
+        <meta-data android:name="com.naver.sdk.clientName" android:value="@string/naver_client_name" />
         <!-- 앱이 백그라운드일 때 FCM 알림도 중요도 높은 채널로 (PushService.channel 과 같은 id) -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
@@ -54,6 +69,8 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
+        <!-- 카카오톡으로 로그인 -->
+        <package android:name="com.kakao.talk" />
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>

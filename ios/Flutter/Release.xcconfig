@@ -1,1 +1,8 @@
 #include "Generated.xcconfig"
+
+// AUTH-006 소셜 로그인 기본값 — 실제 키는 Social.xcconfig(커밋 금지)에 같은 이름으로 넣는다
+KAKAO_NATIVE_APP_KEY=none
+NAVER_URL_SCHEME=ttokttoknaverlogin
+NAVER_CLIENT_ID=none
+NAVER_CLIENT_SECRET=none
+#include? "Social.xcconfig"

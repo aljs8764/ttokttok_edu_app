@@ -7,8 +7,22 @@ import '../api/api_error.dart';
 import '../providers.dart';
 import '../push/push_service.dart';
 import 'models.dart';
+import 'social_sdk.dart';
 
 enum AuthStatus { loggedOut, loggedIn }
+
+/// AUTH-007: 비밀번호(또는 소셜)는 통과했고 2단계 인증 코드를 받아야 한다
+class OtpRequiredException implements Exception {
+  const OtpRequiredException(this.challengeId);
+  final String challengeId;
+}
+
+/// AUTH-006: 연결된 계정이 없는 소셜 로그인 → 학부모 가입으로
+class SocialSignupInfo {
+  const SocialSignupInfo({required this.signupToken, this.name, this.phone});
+  final String signupToken;
+  final String? name, phone;
+}
 
 class AuthState {
   const AuthState({required this.status, this.user, this.institutionId, this.expired = false});
@@ -64,6 +78,59 @@ class AuthController extends Notifier<AuthState> {
     } catch (e) {
       throw ApiException.from(e);
     }
+    if (json['otpRequired'] == true) {
+      await _session.storage.writeLastLoginId(loginId.trim());
+      throw OtpRequiredException(json['challengeId'] as String);
+    }
+    await _complete(json, loginId.trim());
+  }
+
+  /// AUTH-007 로그인 2단계
+  Future<void> loginOtp(String challengeId, String code) async {
+    final Map<String, dynamic> json;
+    try {
+      json = await _api.publicPost('auth/login/otp', {'challengeId': challengeId, 'code': code});
+    } catch (e) {
+      throw ApiException.from(e);
+    }
+    await _complete(json, null);
+  }
+
+  /// AUTH-006 소셜 로그인. 로그인되면 null, 연결된 계정이 없으면 가입 정보
+  Future<SocialSignupInfo?> loginSocial(SocialKind kind, String accessToken) async {
+    final Map<String, dynamic> json;
+    try {
+      json = await _api.publicPost('auth/social/${kind.api}', {'accessToken': accessToken, 'rememberMe': true});
+    } catch (e) {
+      throw ApiException.from(e);
+    }
+    if (json['otpRequired'] == true) throw OtpRequiredException(json['challengeId'] as String);
+    if (json['signupRequired'] == true) {
+      return SocialSignupInfo(signupToken: json['signupToken'] as String, name: json['name'] as String?, phone: json['phone'] as String?);
+    }
+    await _complete(json, null);
+    return null;
+  }
+
+  /// AUTH-006 소셜 가입 (학부모)
+  Future<void> signUpSocial(String signupToken, String name, String phone, List<String> termsIds) async {
+    final Map<String, dynamic> json;
+    try {
+      json = await _api.publicPost('auth/social/signup', {'signupToken': signupToken, 'name': name.trim(), 'phone': phone});
+    } catch (e) {
+      throw ApiException.from(e);
+    }
+    await _complete(json, phone);
+    if (termsIds.isNotEmpty) {
+      try {
+        await _api.dio.post<void>('me/terms/agreements', data: {'termsIds': termsIds}, options: Options(extra: {'noInstitution': true}));
+      } catch (_) {
+        // 실패해도 다음 실행 때 약관 게이트가 다시 묻는다
+      }
+    }
+  }
+
+  Future<void> _complete(Map<String, dynamic> json, String? loginId) async {
     final user = AppUser.fromJson(json['user'] as Map<String, dynamic>);
 
     if (_flavor == Flavor.teacher && user.staffMemberships.isEmpty) {
@@ -75,7 +142,7 @@ class AuthController extends Notifier<AuthState> {
 
     await _session.saveTokens(TokenPair.fromJson(json));
     await _session.storage.writeUser(user);
-    await _session.storage.writeLastLoginId(loginId.trim());
+    if (loginId != null) await _session.storage.writeLastLoginId(loginId);
 
     String? inst;
     if (_flavor == Flavor.teacher) {
@@ -131,6 +198,7 @@ class AuthController extends Notifier<AuthState> {
     // access 토큰이 살아 있을 때 먼저 푸시 기기 해제
     await ref.read(pushServiceProvider).unregister();
     await _api.logout();
+    await socialSignOut();
     await _session.clear();
     state = AuthState.loggedOut;
   }

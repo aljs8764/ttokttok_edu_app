@@ -96,6 +96,13 @@ class MoreTab extends ConsumerWidget {
             ),
             const Divider(height: 1),
             ListTile(
+              leading: const Icon(Icons.link),
+              title: const Text('간편 로그인 연결'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/settings/social'),
+            ),
+            const Divider(height: 1),
+            ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('로그아웃'),
               onTap: () => ref.read(authControllerProvider.notifier).logout(),

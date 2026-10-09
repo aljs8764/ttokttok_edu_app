@@ -7,6 +7,7 @@ import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/providers.dart';
+import 'social_screens.dart';
 
 /// AUTH-001 로그인. 교사앱은 이메일, 학부모앱은 휴대폰 번호가 아이디.
 /// 앱은 항상 로그인 유지(rememberMe) — 다시 켰을 때 바로 들어간다.
@@ -48,6 +49,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await ref.read(authControllerProvider.notifier).login(_id.text, _pw.text);
       // 이동은 router redirect 가 한다
+    } on OtpRequiredException catch (e) {
+      if (mounted) await showOtpDialog(context, ref, e.challengeId);
     } catch (e) {
       if (mounted) setState(() => _error = errorMessage(e));
     } finally {
@@ -124,6 +127,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: 8),
                       OutlinedButton(onPressed: _busy ? null : () => context.push('/signup'), child: const Text('처음이에요 · 가입하기')),
                     ],
+                    SocialLoginButtons(
+                      teacher: teacher,
+                      onOtp: (id) => showOtpDialog(context, ref, id),
+                      onError: (m) => setState(() => _error = m),
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       teacher ? '계정은 원장님이 초대 메일 또는 임시 비밀번호로 만들어 드립니다.' : '학원에 등록된 보호자 번호로 가입하면 자녀가 자동으로 연결됩니다.',
