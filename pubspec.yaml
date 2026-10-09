@@ -22,6 +22,9 @@ dependencies:
   # 학생앱 QR 출석 (스펙 7-7)
   mobile_scanner: ^7.0.1
   geolocator: ^14.0.2
+  # 셔틀 GPS 지도 (ATT-009) — OpenStreetMap 타일, 키 불필요
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
   # 교사앱 알림장 사진 첨부 (카메라·앨범)
   image_picker: ^1.1.2
   file_picker: ^10.3.3 # PDF 첨부

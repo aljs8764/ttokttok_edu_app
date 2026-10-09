@@ -140,6 +140,8 @@ class _AccountMenu extends ConsumerWidget {
             context.push('/institution');
           case 'work':
             context.push('/staff-attendance');
+          case 'shuttle':
+            context.push('/shuttle-drive');
           case 'pw':
             context.push('/settings/password');
           case 'logout':
@@ -150,6 +152,7 @@ class _AccountMenu extends ConsumerWidget {
         PopupMenuItem(enabled: false, child: Text('${auth.user?.name ?? ''} · ${auth.membership?.role.label ?? ''}')),
         if (multi) const PopupMenuItem(value: 'inst', child: Text('기관 바꾸기')),
         const PopupMenuItem(value: 'work', child: Text('출퇴근')),
+        const PopupMenuItem(value: 'shuttle', child: Text('셔틀 운행')),
         const PopupMenuItem(value: 'pw', child: Text('비밀번호 변경')),
         const PopupMenuItem(value: 'logout', child: Text('로그아웃')),
       ],

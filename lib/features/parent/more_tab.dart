@@ -72,6 +72,12 @@ class MoreTab extends ConsumerWidget {
             ),
             const Divider(height: 1),
             ListTile(
+              leading: const Icon(Icons.directions_bus_outlined),
+              title: const Text('셔틀 위치'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/shuttle'),
+            ),
+            ListTile(
               leading: const Icon(Icons.receipt_long_outlined),
               title: const Text('납부 내역'),
               trailing: const Icon(Icons.chevron_right),

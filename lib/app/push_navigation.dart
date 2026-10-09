@@ -61,6 +61,9 @@ void openFromPush(WidgetRef ref, PushPayload p) {
     case 'invoice':
       router.go('/');
       router.push('/invoices');
+    case 'shuttle':
+      router.go('/');
+      router.push('/shuttle');
     case 'attendance':
       tab.state = 0;
       final studentId = p.data['studentId'];

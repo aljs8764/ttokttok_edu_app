@@ -10,6 +10,7 @@ import 'child_selector.dart';
 import 'more_tab.dart';
 import 'notices_tab.dart';
 import '../comm/billing_screens.dart';
+import '../shuttle/shuttle_screens.dart';
 import '../comm/comm_repository.dart';
 import 'parent_providers.dart';
 import 'schedule_tab.dart';
@@ -74,6 +75,8 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
         ref.invalidate(myAbsenceRequestsProvider);
       case 'invoice':
         ref.invalidate(myInvoicesProvider);
+      case 'shuttle':
+        ref.invalidate(myShuttlesProvider);
       default:
         break;
     }
