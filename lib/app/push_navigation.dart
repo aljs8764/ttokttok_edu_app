@@ -15,6 +15,7 @@ import 'router.dart';
 ///  - notice → 알림장 상세(수신 확인)
 ///  - event  → 행사 상세
 ///  - chat   → 대화 화면, absence_request → 결석·지각 신청 목록
+/// 미등원 경고(attendance_missing) → 학부모앱은 attendance 와 같이 홈, 교사앱은 홈
 /// 학부모앱 추가: chat → 대화, survey → 설문 목록, album → 앨범 상세, absence_request → 신청 목록, invoice → 납부 내역
 void openFromPush(WidgetRef ref, PushPayload p) {
   if (!ref.read(authControllerProvider).loggedIn) return;
@@ -28,6 +29,7 @@ void openFromPush(WidgetRef ref, PushPayload p) {
     if (p.type == 'chat' && p.data['conversationId'] != null) router.push('/chat/${p.data['conversationId']}?title=${Uri.encodeComponent('메시지')}&staff=true');
     if (p.type == 'absence_request') router.push('/absence');
     if (p.type == 'consult') router.push('/consults');
+    // attendance_missing (ATT-010 미등원 경고) → 홈(오늘 출결)
     return;
   }
   if (flavor != Flavor.parent) {
@@ -69,6 +71,7 @@ void openFromPush(WidgetRef ref, PushPayload p) {
       router.go('/');
       router.push('/consults');
     case 'attendance':
+    case 'attendance_missing':
       tab.state = 0;
       final studentId = p.data['studentId'];
       // 푸시는 원생(기관) id 로 온다 → 그 원생의 아이를 고른다 (스펙 7-8)

@@ -59,6 +59,7 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
   void _onPush(PushPayload p) {
     switch (p.type) {
       case 'attendance':
+      case 'attendance_missing':
         ref.invalidate(timelineProvider);
       case 'notice':
         ref.invalidate(noticesProvider);

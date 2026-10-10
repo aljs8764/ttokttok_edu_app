@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
+import 'event_follow_up.dart';
 import 'models.dart';
 import 'parent_providers.dart';
 import 'parent_repository.dart';
@@ -152,6 +153,7 @@ class _RsvpSheetState extends ConsumerState<_RsvpSheet> {
                 ],
                 if (_error != null) Text(_error!, style: const TextStyle(color: AppColors.error)),
               ],
+              EventFollowUpSection(event: e),
             ],
           ),
         ),
