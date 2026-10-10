@@ -143,6 +143,8 @@ class _AccountMenu extends ConsumerWidget {
             context.push('/staff-attendance');
           case 'shuttle':
             context.push('/shuttle-drive');
+          case 'consult':
+            context.push('/consults');
           case 'social':
             context.push('/settings/social');
           case 'tutorial':
@@ -158,6 +160,7 @@ class _AccountMenu extends ConsumerWidget {
         if (multi) const PopupMenuItem(value: 'inst', child: Text('기관 바꾸기')),
         const PopupMenuItem(value: 'work', child: Text('출퇴근')),
         const PopupMenuItem(value: 'shuttle', child: Text('셔틀 운행')),
+        const PopupMenuItem(value: 'consult', child: Text('상담 예약')),
         const PopupMenuItem(value: 'tutorial', child: Text('출결 사용법 보기')),
         const PopupMenuItem(value: 'social', child: Text('간편 로그인 연결')),
         const PopupMenuItem(value: 'pw', child: Text('비밀번호 변경')),

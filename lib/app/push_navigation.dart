@@ -27,6 +27,7 @@ void openFromPush(WidgetRef ref, PushPayload p) {
     if (id != null && p.type == 'event') router.push('/events/$id');
     if (p.type == 'chat' && p.data['conversationId'] != null) router.push('/chat/${p.data['conversationId']}?title=${Uri.encodeComponent('메시지')}&staff=true');
     if (p.type == 'absence_request') router.push('/absence');
+    if (p.type == 'consult') router.push('/consults');
     return;
   }
   if (flavor != Flavor.parent) {
@@ -64,6 +65,9 @@ void openFromPush(WidgetRef ref, PushPayload p) {
     case 'shuttle':
       router.go('/');
       router.push('/shuttle');
+    case 'consult':
+      router.go('/');
+      router.push('/consults');
     case 'attendance':
       tab.state = 0;
       final studentId = p.data['studentId'];

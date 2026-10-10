@@ -72,6 +72,24 @@ class MoreTab extends ConsumerWidget {
             ),
             const Divider(height: 1),
             ListTile(
+              leading: const Icon(Icons.event_available_outlined),
+              title: const Text('상담 예약'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/consults'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.sticky_note_2_outlined),
+              title: const Text('상담 기록'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/counsel-notes'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.calendar_view_week_outlined),
+              title: const Text('주간 시간표'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/timetable'),
+            ),
+            ListTile(
               leading: const Icon(Icons.directions_bus_outlined),
               title: const Text('셔틀 위치'),
               trailing: const Icon(Icons.chevron_right),
