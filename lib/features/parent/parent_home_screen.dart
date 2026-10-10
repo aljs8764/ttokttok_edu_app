@@ -1,3 +1,4 @@
+import '../../core/i18n/i18n.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -121,7 +122,7 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titles[tab]),
+        title: Text(ref.t(_titles[tab])),
         bottom: tab < 3 ? const PreferredSize(preferredSize: Size.fromHeight(52), child: ChildSelector()) : null,
       ),
       body: IndexedStack(
@@ -133,18 +134,18 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
         onDestinationSelected: (i) => ref.read(parentTabProvider.notifier).state = i,
         indicatorColor: AppColors.primary.withValues(alpha: 0.1),
         destinations: [
-          const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: '홈'),
+          NavigationDestination(icon: const Icon(Icons.home_outlined), selectedIcon: const Icon(Icons.home), label: ref.t('홈')),
           NavigationDestination(
             icon: Badge(isLabelVisible: unread > 0, label: Text('$unread'), child: const Icon(Icons.mail_outline)),
             selectedIcon: Badge(isLabelVisible: unread > 0, label: Text('$unread'), child: const Icon(Icons.mail)),
-            label: '알림장',
+            label: ref.t('알림장'),
           ),
           NavigationDestination(
             icon: Badge(isLabelVisible: pendingRsvp > 0, label: Text('$pendingRsvp'), child: const Icon(Icons.event_outlined)),
             selectedIcon: Badge(isLabelVisible: pendingRsvp > 0, label: Text('$pendingRsvp'), child: const Icon(Icons.event)),
-            label: '일정',
+            label: ref.t('일정'),
           ),
-          const NavigationDestination(icon: Icon(Icons.more_horiz), label: '더보기'),
+          NavigationDestination(icon: const Icon(Icons.more_horiz), label: ref.t('더보기')),
         ],
       ),
     );

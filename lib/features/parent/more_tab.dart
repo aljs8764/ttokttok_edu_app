@@ -1,3 +1,4 @@
+import '../../core/i18n/i18n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,7 +27,7 @@ class MoreTab extends ConsumerWidget {
         Text('${user?.name ?? ''} 님', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
         const MergeSuggestionBanner(),
-        const Text('우리 아이', style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+        Text(ref.t('우리 아이'), style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
         const SizedBox(height: 8),
         ...children.when(
           loading: () => [const LinearProgressIndicator()],
@@ -45,59 +46,59 @@ class MoreTab extends ConsumerWidget {
           child: Column(children: [
             ListTile(
               leading: const Icon(Icons.chat_bubble_outline),
-              title: const Text('메시지'),
+              title: Text(ref.t('메시지')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/chat'),
             ),
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.event_busy_outlined),
-              title: const Text('결석·지각 신청'),
+              title: Text(ref.t('결석·지각 신청')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/absence'),
             ),
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.poll_outlined),
-              title: const Text('설문'),
+              title: Text(ref.t('설문')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/surveys'),
             ),
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('앨범'),
+              title: Text(ref.t('앨범')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/albums'),
             ),
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.event_available_outlined),
-              title: const Text('상담 예약'),
+              title: Text(ref.t('상담 예약')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/consults'),
             ),
             ListTile(
               leading: const Icon(Icons.sticky_note_2_outlined),
-              title: const Text('상담 기록'),
+              title: Text(ref.t('상담 기록')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/counsel-notes'),
             ),
             ListTile(
               leading: const Icon(Icons.calendar_view_week_outlined),
-              title: const Text('주간 시간표'),
+              title: Text(ref.t('주간 시간표')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/timetable'),
             ),
             ListTile(
               leading: const Icon(Icons.directions_bus_outlined),
-              title: const Text('셔틀 위치'),
+              title: Text(ref.t('셔틀 위치')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/shuttle'),
             ),
             ListTile(
               leading: const Icon(Icons.receipt_long_outlined),
-              title: const Text('납부 내역'),
+              title: Text(ref.t('납부 내역')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/invoices'),
             ),
@@ -108,21 +109,32 @@ class MoreTab extends ConsumerWidget {
           child: Column(children: [
             ListTile(
               leading: const Icon(Icons.lock_outline),
-              title: const Text('비밀번호 변경'),
+              title: Text(ref.t('비밀번호 변경')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/settings/password'),
             ),
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.link),
-              title: const Text('간편 로그인 연결'),
+              title: Text(ref.t('간편 로그인 연결')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/settings/social'),
             ),
             const Divider(height: 1),
             ListTile(
+              leading: const Icon(Icons.language),
+              title: Text(ref.t('언어')),
+              trailing: SegmentedButton<String>(
+                showSelectedIcon: false,
+                segments: const [ButtonSegment(value: 'ko', label: Text('한국어')), ButtonSegment(value: 'en', label: Text('English'))],
+                selected: {ref.watch(localeProvider)},
+                onSelectionChanged: (s) => ref.read(localeProvider.notifier).set(s.first),
+              ),
+            ),
+            const Divider(height: 1),
+            ListTile(
               leading: const Icon(Icons.logout),
-              title: const Text('로그아웃'),
+              title: Text(ref.t('로그아웃')),
               onTap: () => ref.read(authControllerProvider.notifier).logout(),
             ),
           ]),

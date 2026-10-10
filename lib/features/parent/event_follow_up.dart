@@ -1,3 +1,4 @@
+import '../../core/i18n/i18n.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -117,7 +118,7 @@ class _EventFollowUpSectionState extends ConsumerState<EventFollowUpSection> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Divider(height: 28),
-        const Text('행사 사진', style: TextStyle(fontWeight: FontWeight.w700)),
+        Text(ref.t('행사 사진'), style: const TextStyle(fontWeight: FontWeight.w700)),
         const SizedBox(height: 8),
         albums.when(
           loading: () => const LinearProgress(),
@@ -140,7 +141,7 @@ class _EventFollowUpSectionState extends ConsumerState<EventFollowUpSection> {
                 ]),
         ),
         const Divider(height: 28),
-        const Text('후기', style: TextStyle(fontWeight: FontWeight.w700)),
+        Text(ref.t('후기'), style: const TextStyle(fontWeight: FontWeight.w700)),
         const SizedBox(height: 8),
         if (writing) ...[
           if (e.children.length > 1)
