@@ -29,6 +29,8 @@ void openFromPush(WidgetRef ref, PushPayload p) {
     if (p.type == 'chat' && p.data['conversationId'] != null) router.push('/chat/${p.data['conversationId']}?title=${Uri.encodeComponent('메시지')}&staff=true');
     if (p.type == 'absence_request') router.push('/absence');
     if (p.type == 'consult') router.push('/consults');
+    // DASH-015·023 교직원 공지 → 오늘 할 일
+    if (p.type == 'staff_memo') router.push('/today');
     // attendance_missing (ATT-010 미등원 경고) → 홈(오늘 출결)
     return;
   }

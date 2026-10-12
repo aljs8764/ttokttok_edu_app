@@ -8,6 +8,7 @@ import '../../core/api/api_error.dart';
 import '../../core/auth/auth_controller.dart';
 import 'models.dart';
 import 'teacher_providers.dart';
+import 'teacher_dashboard.dart';
 import 'tutorial.dart';
 import '../../core/i18n/i18n.dart';
 
@@ -40,7 +41,10 @@ class TeacherHomeScreen extends ConsumerWidget {
         actions: [const AttendanceTutorialGate(), _AccountMenu(auth: auth)],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.refresh(classesProvider.future),
+        onRefresh: () {
+          ref.invalidate(teacherTodayProvider);
+          return ref.refresh(classesProvider.future);
+        },
         child: classes.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => _Message(errorMessage(e), retry: () => ref.invalidate(classesProvider)),
@@ -50,11 +54,12 @@ class TeacherHomeScreen extends ConsumerWidget {
                 final ah = a.heldOn(now) ? 0 : 1, bh = b.heldOn(now) ? 0 : 1;
                 return ah != bh ? ah - bh : a.startTime.compareTo(b.startTime);
               });
+            // DASH-018~023: 맨 위 '오늘 할 일' 요약 → 누르면 교사 대시보드
             return ListView.separated(
               padding: const EdgeInsets.all(16),
-              itemCount: sorted.length,
+              itemCount: sorted.length + 1,
               separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (_, i) => _ClassCard(c: sorted[i], now: now),
+              itemBuilder: (_, i) => i == 0 ? const TodaySummaryCard() : _ClassCard(c: sorted[i - 1], now: now),
             );
           },
         ),

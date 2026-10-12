@@ -28,6 +28,7 @@ import '../features/teacher/event_form_screen.dart';
 import '../features/teacher/notice_detail_screen.dart';
 import '../features/teacher/notice_form_screen.dart';
 import '../features/teacher/ops_screens.dart';
+import '../features/teacher/teacher_dashboard.dart';
 import '../features/teacher/teacher_shell.dart';
 import 'flavor.dart';
 import '../core/i18n/i18n.dart';
@@ -110,6 +111,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             staff: s.uri.queryParameters['staff'] == 'true',
           ),
         ),
+        GoRoute(path: '/today', builder: (_, __) => const TeacherTodayScreen()),
         GoRoute(path: '/absence', builder: (_, __) => const StaffAbsenceScreen()),
         GoRoute(path: '/staff-attendance', builder: (_, __) => const StaffCheckInScreen()),
         GoRoute(path: '/shuttle-drive', builder: (_, __) => const ShuttleDriveScreen()),

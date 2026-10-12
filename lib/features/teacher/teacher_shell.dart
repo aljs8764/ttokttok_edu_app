@@ -14,6 +14,7 @@ import 'content_providers.dart';
 import 'events_tab.dart';
 import 'notices_tab.dart';
 import 'teacher_home_screen.dart';
+import 'teacher_dashboard.dart';
 
 /// 교사앱 하단 탭 — 출결(반 목록) · 알림장 · 행사 · 메시지 · 결석·지각 신청. 탭은 처음 열 때 만든다 (시작할 때 불필요한 조회를 줄이려고).
 class TeacherShell extends ConsumerStatefulWidget {
@@ -67,6 +68,7 @@ class _TeacherShellState extends ConsumerState<TeacherShell> {
     if (p.type == 'event') _markDirty(event: p.data['eventId']);
     if (p.type == 'chat') ref.invalidate(conversationsProvider(true));
     if (p.type == 'absence_request') ref.invalidate(staffAbsenceRequestsProvider);
+    if (p.type == 'staff_memo' || p.type == 'attendance_missing') ref.invalidate(teacherTodayProvider);
   }
 
   /// 수신 확인이 몰려올 수 있어 0.8초 모아서 한 번에 다시 읽는다
