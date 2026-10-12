@@ -8,6 +8,7 @@ import '../../core/widgets/date_time_field.dart';
 import '../../core/widgets/pill.dart';
 import 'content_models.dart';
 import 'content_providers.dart';
+import '../../core/i18n/i18n.dart';
 
 /// NTC-004 알림장 탭 — 내가 보낸·예약한 알림장 (원장·실장은 기관 전체). 누르면 상세(수신 확인), + 로 작성.
 class TeacherNoticesTab extends ConsumerWidget {
@@ -18,11 +19,11 @@ class TeacherNoticesTab extends ConsumerWidget {
     final notices = ref.watch(noticesProvider);
     final filter = ref.watch(noticeFilterProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('알림장')),
+      appBar: AppBar(title: Text(tr('알림장'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/notices/new'),
         icon: const Icon(Icons.edit_outlined),
-        label: const Text('알림장 쓰기'),
+        label: Text(tr('알림장 쓰기')),
       ),
       body: Column(children: [
         const _FilterBar(),
@@ -33,7 +34,7 @@ class TeacherNoticesTab extends ConsumerWidget {
           error: (e, _) => ListView(children: [
             const SizedBox(height: 120),
             Text(errorMessage(e), textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textSecondary)),
-            Center(child: TextButton(onPressed: () => ref.invalidate(noticesProvider), child: const Text('다시 시도'))),
+            Center(child: TextButton(onPressed: () => ref.invalidate(noticesProvider), child: Text(tr('다시 시도')))),
           ]),
           data: (s) {
             if (s.items.isEmpty) {
@@ -41,7 +42,7 @@ class TeacherNoticesTab extends ConsumerWidget {
                 const SizedBox(height: 120),
                 const Icon(Icons.menu_book_outlined, size: 48, color: AppColors.muted),
                 const SizedBox(height: 12),
-                Center(child: Text(filter.isEmpty ? '보낸 알림장이 없습니다' : '조건에 맞는 알림장이 없습니다', style: const TextStyle(color: AppColors.textSecondary))),
+                Center(child: Text(filter.isEmpty ? tr('보낸 알림장이 없습니다') : tr('조건에 맞는 알림장이 없습니다'), style: const TextStyle(color: AppColors.textSecondary))),
               ]);
             }
             return NotificationListener<ScrollNotification>(
@@ -123,7 +124,7 @@ class _NoticeTile extends StatelessWidget {
               Row(children: [
                 Expanded(child: Text('${targetSummary(n.targets)} · ${n.authorName}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))),
                 if (n.status == NoticeStatus.sent && stats != null)
-                  Text('열람 ${stats.readStudents}/${stats.targetStudents}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                  Text(tr('열람 {0}/{1}', [stats.readStudents, stats.targetStudents]), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary)),
               ]),
             ],
           ),

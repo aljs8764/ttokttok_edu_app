@@ -1,3 +1,4 @@
+import '../core/i18n/i18n.dart';
 /// 앱 종류 (스펙: 교사앱·학부모앱·학생앱 = 하나의 코드베이스, flavor 3개).
 /// 진입점이 다르다: lib/main_teacher.dart, lib/main_parent.dart, lib/main_student.dart
 enum Flavor {
@@ -11,9 +12,9 @@ enum Flavor {
   String get apiName => name.toUpperCase();
 
   String get title => switch (this) {
-        Flavor.teacher => '똑똑 선생님',
-        Flavor.parent => '똑똑',
-        Flavor.student => '똑똑 출석',
+        Flavor.teacher => tr('똑똑 선생님'),
+        Flavor.parent => tr('똑똑'),
+        Flavor.student => tr('똑똑 출석'),
       };
 }
 

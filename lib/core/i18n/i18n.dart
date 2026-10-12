@@ -4,9 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers.dart';
+import 'i18n_en.dart';
 
 /// SET-007 다국어 (한국어·영어). 한국어 문구를 키로 쓰고 영어 사전에 있는 것만 바꾼다.
-/// 아직 옮기지 않은 화면·서버 안내 문구는 한국어로 보인다. 화면을 옮길 때 [_en] 에 문구만 더하면 된다.
+/// 화면 문구 사전은 i18n_en.dart([enScreens]), 탭·더보기 기본 문구는 아래 [_en]. 사전에 없으면 한국어 그대로.
+/// - 위젯·헬퍼 어디서나 [tr] ('{0}명' 처럼 자리표시 + 값 목록). 언어를 바꾸면 앱 전체를 다시 그린다(app.dart builder).
+/// - 서버 오류 문장은 Accept-Language 로 같은 언어를 받는다(api_client.dart).
+/// - 날짜 형식은 tr('M월 d일 (E)') + [dateLocale].
 const _prefKey = 'ui_locale';
 
 const Map<String, String> _en = {
@@ -23,7 +27,23 @@ const Map<String, String> _en = {
   '행사 사진': 'Event photos', '후기': 'Reviews', '후기 남기기': 'Write a review', '수정': 'Edit', '삭제': 'Delete', '취소': 'Cancel',
 };
 
-String translate(String ko, String locale) => locale == 'en' ? (_en[ko] ?? ko) : ko;
+String translate(String ko, String locale) => locale == 'en' ? (_en[ko] ?? enScreens[ko] ?? ko) : ko;
+
+/// 현재 화면 언어 (LocaleController 가 맞춰 둔다). 위젯 밖(헬퍼·API 헤더)에서도 쓴다
+String _current = 'ko';
+String get currentLocale => _current;
+
+/// 화면 문구. 값이 끼는 문구는 tr('{0}명', [n])
+String tr(String ko, [List<Object?> args = const []]) {
+  var s = translate(ko, _current);
+  for (var i = 0; i < args.length; i++) {
+    s = s.replaceAll('{$i}', '${args[i] ?? ''}');
+  }
+  return s;
+}
+
+/// DateFormat 두 번째 인자 (요일·월 이름 언어)
+String dateLocale() => _current == 'en' ? 'en_US' : 'ko_KR';
 
 class LocaleController extends Notifier<String> {
   @override
@@ -35,13 +55,18 @@ class LocaleController extends Notifier<String> {
   Future<void> _load() async {
     try {
       final v = (await SharedPreferences.getInstance()).getString(_prefKey);
-      if (v == 'en' || v == 'ko') state = v!;
+      if (v == 'en' || v == 'ko') {
+        final code = v!;
+        _current = code;
+        state = code;
+      }
     } catch (_) {}
   }
 
   /// 기기에 저장하고, 로그인돼 있으면 계정(/me/locale)에도 저장한다 (실패는 무시)
   Future<void> set(String code) async {
     if (code != 'en' && code != 'ko') return;
+    _current = code;
     state = code;
     try {
       (await SharedPreferences.getInstance()).setString(_prefKey, code);

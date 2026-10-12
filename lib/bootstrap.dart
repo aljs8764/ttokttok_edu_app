@@ -15,6 +15,7 @@ import 'features/student/student_api.dart';
 Future<void> bootstrap(Flavor flavor) async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ko_KR');
+  await initializeDateFormatting('en_US'); // SET-007 영어 화면의 날짜·요일
   initSocialSdks();
 
   final container = ProviderContainer(overrides: [appConfigProvider.overrideWithValue(AppConfig(flavor))]);

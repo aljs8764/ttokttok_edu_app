@@ -124,14 +124,14 @@ class _EventFollowUpSectionState extends ConsumerState<EventFollowUpSection> {
           loading: () => const LinearProgress(),
           error: (err, _) => Text(errorMessage(err), style: const TextStyle(color: AppColors.error)),
           data: (list) => list.isEmpty
-              ? const Text('아직 올라온 사진이 없어요', style: TextStyle(color: AppColors.muted))
+              ? Text(tr('아직 올라온 사진이 없어요'), style: TextStyle(color: AppColors.muted))
               : Column(children: [
                   for (final a in list)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.photo_library_outlined),
                       title: Text(a.title),
-                      subtitle: Text('사진 ${a.itemCount}장'),
+                      subtitle: Text(tr('사진 {0}장', [a.itemCount])),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         Navigator.of(context).pop();
@@ -149,7 +149,7 @@ class _EventFollowUpSectionState extends ConsumerState<EventFollowUpSection> {
               padding: const EdgeInsets.only(bottom: 8),
               child: DropdownButtonFormField<String>(
                 value: _studentId ?? e.children.first.studentId,
-                decoration: const InputDecoration(labelText: '자녀', isDense: true),
+                decoration: InputDecoration(labelText: tr('자녀'), isDense: true),
                 items: [for (final c in e.children) DropdownMenuItem(value: c.studentId, child: Text(c.name))],
                 onChanged: (v) => setState(() => _studentId = v),
               ),
@@ -159,11 +159,11 @@ class _EventFollowUpSectionState extends ConsumerState<EventFollowUpSection> {
             maxLength: 1000,
             minLines: 2,
             maxLines: 5,
-            decoration: const InputDecoration(hintText: '행사는 어떠셨나요? 선생님과 다른 보호자에게 보입니다.', isDense: true),
+            decoration: InputDecoration(hintText: tr('행사는 어떠셨나요? 선생님과 다른 보호자에게 보입니다.'), isDense: true),
           ),
           Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-            if (_editing) TextButton(onPressed: _busy ? null : () => setState(() => _editing = false), child: const Text('취소')),
-            FilledButton(onPressed: _busy ? null : _save, child: Text(mine == null ? '후기 남기기' : '수정')),
+            if (_editing) TextButton(onPressed: _busy ? null : () => setState(() => _editing = false), child: Text(tr('취소'))),
+            FilledButton(onPressed: _busy ? null : _save, child: Text(mine == null ? tr('후기 남기기') : tr('수정'))),
           ]),
         ],
         if (_error != null) Text(_error!, style: const TextStyle(color: AppColors.error)),
@@ -173,7 +173,7 @@ class _EventFollowUpSectionState extends ConsumerState<EventFollowUpSection> {
           data: (list) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (list.isEmpty) const Text('첫 후기를 남겨 주세요', style: TextStyle(color: AppColors.muted)),
+              if (list.isEmpty) Text(tr('첫 후기를 남겨 주세요'), style: TextStyle(color: AppColors.muted)),
               for (final r in list)
                 Container(
                   margin: const EdgeInsets.only(top: 8),
@@ -185,7 +185,7 @@ class _EventFollowUpSectionState extends ConsumerState<EventFollowUpSection> {
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Row(children: [
                       Expanded(
-                        child: Text('${r.studentName} 보호자 · ${_dt.format(r.createdAt)}${r.hidden ? ' · 선생님이 숨김' : ''}',
+                        child: Text(tr('{0} 보호자 · {1}', [r.studentName, _dt.format(r.createdAt)]) + (r.hidden ? tr(' · 선생님이 숨김') : ''),
                             style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                       ),
                       if (r.mine && !_editing) ...[
@@ -196,11 +196,11 @@ class _EventFollowUpSectionState extends ConsumerState<EventFollowUpSection> {
                                     _editing = true;
                                     _body.text = r.body;
                                   }),
-                          child: const Padding(padding: EdgeInsets.all(4), child: Text('수정', style: TextStyle(fontSize: 12))),
+                          child: Padding(padding: EdgeInsets.all(4), child: Text(tr('수정'), style: TextStyle(fontSize: 12))),
                         ),
                         InkWell(
                           onTap: _busy ? null : _delete,
-                          child: const Padding(padding: EdgeInsets.all(4), child: Text('삭제', style: TextStyle(fontSize: 12, color: AppColors.error))),
+                          child: Padding(padding: EdgeInsets.all(4), child: Text(tr('삭제'), style: TextStyle(fontSize: 12, color: AppColors.error))),
                         ),
                       ],
                     ]),

@@ -1,3 +1,4 @@
+import '../../core/i18n/i18n.dart';
 /// 학부모앱 응답 모델 (/me/* — 기관 헤더 없이 소속 전 기관을 가로지른다)
 
 DateTime? _t(Object? v) => v == null ? null : DateTime.parse(v as String).toLocal();
@@ -46,10 +47,10 @@ class Enrollment {
   final String status;
 
   String get typeLabel => switch (institutionType) {
-        'SCHOOL' => '학교',
-        'DAYCARE' => '어린이집',
-        'OTHER' => '기관',
-        _ => '학원',
+        'SCHOOL' => tr('학교'),
+        'DAYCARE' => tr('어린이집'),
+        'OTHER' => tr('기관'),
+        _ => tr('학원'),
       };
 
   factory Enrollment.fromJson(Map<String, dynamic> j) => Enrollment(
@@ -122,13 +123,13 @@ class TimelineItem {
 
   /// 학부모에게 보이는 문장 — "도착했어요" / "출발했어요 → 셔틀 1호차"
   String get headline => switch (type) {
-        'CHECK_IN' => isLate ? '$institutionName에 도착했어요 (지각)' : '$institutionName에 도착했어요',
-        'CHECK_OUT' => destinationName != null ? '$institutionName에서 출발했어요 → $destinationName' : '$institutionName에서 출발했어요',
+        'CHECK_IN' => isLate ? tr('{0}에 도착했어요 (지각)', [institutionName]) : tr('{0}에 도착했어요', [institutionName]),
+        'CHECK_OUT' => destinationName != null ? tr('{0}에서 출발했어요 → {1}', [institutionName, destinationName]) : tr('{0}에서 출발했어요', [institutionName]),
         _ => switch (status) {
-            'ABSENT' => '$institutionName 결석으로 처리됐어요',
-            'IN' => '$institutionName 등원으로 정정됐어요',
-            'OUT' => '$institutionName 하원으로 정정됐어요',
-            _ => '$institutionName 출결이 바뀌었어요',
+            'ABSENT' => tr('{0} 결석으로 처리됐어요', [institutionName]),
+            'IN' => tr('{0} 등원으로 정정됐어요', [institutionName]),
+            'OUT' => tr('{0} 하원으로 정정됐어요', [institutionName]),
+            _ => tr('{0} 출결이 바뀌었어요', [institutionName]),
           },
       };
 }

@@ -9,6 +9,7 @@ import '../../core/auth/auth_controller.dart';
 import 'models.dart';
 import 'teacher_providers.dart';
 import 'teacher_repository.dart';
+import '../../core/i18n/i18n.dart';
 
 /// 네트워크가 없을 때 누른 등원·하원 한 건 (ATT-005·006 오프라인 큐, 스펙 6장).
 /// 같은 Idempotency-Key·clientAt 으로 POST /attendance/bulk 에 실어 보내므로, 응답만 놓친 요청이 이미 처리됐어도 중복되지 않는다.
@@ -41,7 +42,7 @@ class QueuedAttendance {
   final String institutionId;
 
   bool get isCheckIn => type == 'CHECK_IN';
-  String get label => isCheckIn ? '등원' : '하원';
+  String get label => isCheckIn ? tr('등원') : tr('하원');
 
   factory QueuedAttendance.fromJson(Map<String, dynamic> j) => QueuedAttendance(
         key: j['key'] as String,

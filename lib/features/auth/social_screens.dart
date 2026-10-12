@@ -10,6 +10,7 @@ import '../../core/providers.dart';
 import '../parent/models.dart';
 import '../parent/parent_repository.dart';
 import '../parent/terms_gate.dart';
+import '../../core/i18n/i18n.dart';
 
 final _termsProvider = FutureProvider.autoDispose<List<Terms>>((ref) => fetchPublicParentTerms(ref.watch(apiClientProvider)));
 
@@ -46,7 +47,7 @@ class _SocialLoginButtonsState extends ConsumerState<SocialLoginButtons> {
       final signup = await ref.read(authControllerProvider.notifier).loginSocial(k, token);
       if (signup == null || !mounted) return; // 로그인됨 → router redirect
       if (widget.teacher) {
-        widget.onError('${k.label} 계정이 연결된 선생님 계정이 없습니다. 이메일로 로그인한 뒤 메뉴 > 간편 로그인 연결에서 연결해 주세요.');
+        widget.onError(tr('{0} 계정이 연결된 선생님 계정이 없습니다. 이메일로 로그인한 뒤 메뉴 > 간편 로그인 연결에서 연결해 주세요.', [k.label]));
       } else {
         Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => SocialSignupScreen(info: signup)));
       }
@@ -65,9 +66,9 @@ class _SocialLoginButtonsState extends ConsumerState<SocialLoginButtons> {
     if (list.isEmpty) return const SizedBox.shrink();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       const SizedBox(height: 20),
-      const Row(children: [
+      Row(children: [
         Expanded(child: Divider()),
-        Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('간편 로그인', style: TextStyle(fontSize: 12, color: AppColors.textSecondary))),
+        Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text(tr('간편 로그인'), style: TextStyle(fontSize: 12, color: AppColors.textSecondary))),
         Expanded(child: Divider()),
       ]),
       const SizedBox(height: 12),
@@ -78,7 +79,7 @@ class _SocialLoginButtonsState extends ConsumerState<SocialLoginButtons> {
             foregroundColor: k == SocialKind.kakao ? const Color(0xD9000000) : Colors.white,
           ),
           onPressed: _busy ? null : () => _go(k),
-          child: Text('${k.label}로 시작'),
+          child: Text(tr('{0}로 시작', [k.label])),
         ),
         const SizedBox(height: 8),
       ],
@@ -134,13 +135,13 @@ class _SocialSignupScreenState extends ConsumerState<SocialSignupScreen> {
     final requiredOk = list.where((t) => t.required).every((t) => _checked.contains(t.id));
     final valid = _name.text.trim().isNotEmpty && _phoneOk && requiredOk && terms.hasValue;
     return Scaffold(
-      appBar: AppBar(title: const Text('가입하기')),
+      appBar: AppBar(title: Text(tr('가입하기'))),
       body: ListView(padding: const EdgeInsets.all(20), children: [
-        const Text('학원에 등록된 보호자 휴대폰 번호를 입력하면 자녀가 자동으로 연결됩니다.', style: TextStyle(color: AppColors.textSecondary)),
+        Text(tr('학원에 등록된 보호자 휴대폰 번호를 입력하면 자녀가 자동으로 연결됩니다.'), style: TextStyle(color: AppColors.textSecondary)),
         const SizedBox(height: 16),
-        TextField(controller: _name, decoration: const InputDecoration(labelText: '이름'), onChanged: (_) => setState(() {})),
+        TextField(controller: _name, decoration: InputDecoration(labelText: tr('이름')), onChanged: (_) => setState(() {})),
         const SizedBox(height: 12),
-        TextField(controller: _phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: '휴대폰 번호'), onChanged: (_) => setState(() {})),
+        TextField(controller: _phone, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: tr('휴대폰 번호')), onChanged: (_) => setState(() {})),
         const SizedBox(height: 16),
         ...terms.when(
           loading: () => [const Center(child: CircularProgressIndicator())],
@@ -152,7 +153,7 @@ class _SocialSignupScreenState extends ConsumerState<SocialSignupScreen> {
         ),
         if (_error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(_error!, style: const TextStyle(color: AppColors.error))),
         const SizedBox(height: 20),
-        FilledButton(onPressed: _busy || !valid ? null : _submit, child: const Text('가입 완료')),
+        FilledButton(onPressed: _busy || !valid ? null : _submit, child: Text(tr('가입 완료'))),
       ]),
     );
   }
@@ -227,24 +228,24 @@ class _SocialLinkScreenState extends ConsumerState<SocialLinkScreen> {
     final links = ((d?['links'] as List?) ?? const []).cast<Map<String, dynamic>>();
     final kinds = SocialKind.values.where((k) => enabled.contains(k.api) && socialConfigured(k)).toList();
     return Scaffold(
-      appBar: AppBar(title: const Text('간편 로그인 연결')),
+      appBar: AppBar(title: Text(tr('간편 로그인 연결'))),
       body: d == null && _error == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(padding: const EdgeInsets.all(16), children: [
-              const Text('연결해 두면 다음부터 비밀번호 없이 카카오·네이버로 로그인할 수 있습니다.', style: TextStyle(color: AppColors.textSecondary)),
+              Text(tr('연결해 두면 다음부터 비밀번호 없이 카카오·네이버로 로그인할 수 있습니다.'), style: TextStyle(color: AppColors.textSecondary)),
               const SizedBox(height: 12),
               if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(_error!, style: const TextStyle(color: AppColors.error))),
-              if (kinds.isEmpty) const Text('지금은 사용할 수 있는 간편 로그인이 없습니다.'),
+              if (kinds.isEmpty) Text(tr('지금은 사용할 수 있는 간편 로그인이 없습니다.')),
               for (final k in kinds)
                 Builder(builder: (_) {
                   final link = links.where((l) => l['provider'] == k.api).firstOrNull;
                   return Card(
                     child: ListTile(
                       title: Text(k.label),
-                      subtitle: Text(link == null ? '연결 안 됨' : '연결됨${link['email'] != null ? ' · ${link['email']}' : ''}'),
+                      subtitle: Text(link == null ? tr('연결 안 됨') : tr('연결됨{0}', [link['email'] != null ? ' · ${link['email']}' : ''])),
                       trailing: link == null
-                          ? FilledButton(onPressed: _busy ? null : () => _link(k), child: const Text('연결'))
-                          : TextButton(onPressed: _busy ? null : () => _unlink(k), child: const Text('해제')),
+                          ? FilledButton(onPressed: _busy ? null : () => _link(k), child: Text(tr('연결')))
+                          : TextButton(onPressed: _busy ? null : () => _unlink(k), child: Text(tr('해제'))),
                     ),
                   );
                 }),
@@ -263,15 +264,15 @@ Future<void> showOtpDialog(BuildContext context, WidgetRef ref, String challenge
     barrierDismissible: false,
     builder: (c) => StatefulBuilder(
       builder: (c, set) => AlertDialog(
-        title: const Text('2단계 인증'),
+        title: Text(tr('2단계 인증')),
         content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('인증 앱에 표시된 6자리 숫자를 입력하세요. 휴대폰을 바꿨다면 복구 코드를 입력할 수 있습니다.', style: TextStyle(fontSize: 13)),
+          Text(tr('인증 앱에 표시된 6자리 숫자를 입력하세요. 휴대폰을 바꿨다면 복구 코드를 입력할 수 있습니다.'), style: TextStyle(fontSize: 13)),
           const SizedBox(height: 12),
-          TextField(controller: ctrl, autofocus: true, decoration: const InputDecoration(labelText: '인증 코드')),
+          TextField(controller: ctrl, autofocus: true, decoration: InputDecoration(labelText: tr('인증 코드'))),
           if (error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(error!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
         ]),
         actions: [
-          TextButton(onPressed: busy ? null : () => Navigator.pop(c), child: const Text('취소')),
+          TextButton(onPressed: busy ? null : () => Navigator.pop(c), child: Text(tr('취소'))),
           FilledButton(
             onPressed: busy
                 ? null
@@ -285,7 +286,7 @@ Future<void> showOtpDialog(BuildContext context, WidgetRef ref, String challenge
                       if (c.mounted) Navigator.pop(c);
                     } catch (e) {
                       final msg = errorMessage(e);
-                      if (msg.contains('처음부터') && c.mounted) {
+                      if (msg.contains(tr('처음부터')) && c.mounted) {
                         Navigator.pop(c);
                         return;
                       }
@@ -295,7 +296,7 @@ Future<void> showOtpDialog(BuildContext context, WidgetRef ref, String challenge
                       });
                     }
                   },
-            child: const Text('확인'),
+            child: Text(tr('확인')),
           ),
         ],
       ),

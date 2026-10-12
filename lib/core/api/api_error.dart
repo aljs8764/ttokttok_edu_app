@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../i18n/i18n.dart';
 
 /// 백엔드 오류 {code, message, details} 를 화면에서 쓰기 좋게
 class ApiException implements Exception {
@@ -16,19 +17,19 @@ class ApiException implements Exception {
     if (e is DioException) {
       final res = e.response;
       if (res == null) {
-        return ApiException(null, 'NETWORK', '네트워크에 연결할 수 없습니다. 잠시 후 다시 시도하세요');
+        return ApiException(null, 'NETWORK', tr('네트워크에 연결할 수 없습니다. 잠시 후 다시 시도하세요'));
       }
       final data = res.data;
       if (data is Map) {
         return ApiException(
           res.statusCode,
           (data['code'] ?? 'ERROR').toString(),
-          (data['message'] ?? '요청에 실패했습니다 (${res.statusCode})').toString(),
+          (data['message'] ?? tr('요청에 실패했습니다 ({0})', [res.statusCode])).toString(),
         );
       }
-      return ApiException(res.statusCode, 'ERROR', '요청에 실패했습니다 (${res.statusCode})');
+      return ApiException(res.statusCode, 'ERROR', tr('요청에 실패했습니다 ({0})', [res.statusCode]));
     }
-    return ApiException(null, 'UNKNOWN', '알 수 없는 오류가 발생했습니다');
+    return ApiException(null, 'UNKNOWN', tr('알 수 없는 오류가 발생했습니다'));
   }
 
   @override

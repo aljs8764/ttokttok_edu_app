@@ -12,6 +12,7 @@ import 'content_models.dart';
 import 'content_providers.dart';
 import 'content_repository.dart';
 import 'target_picker.dart';
+import '../../core/i18n/i18n.dart';
 
 /// NTC-001 알림장·공지 작성 (즉시 / 예약 발송, 사진 최대 10장). [id] 가 있으면 예약 건 수정.
 /// 공지와 전체 대상은 원장·실장만. 예약은 30일 이내.
@@ -80,10 +81,10 @@ class _NoticeFormScreenState extends ConsumerState<NoticeFormScreen> {
   String? get _scheduleError {
     if (!_scheduled) return null;
     final at = _sendAt;
-    if (at == null) return '예약 시각을 고르세요';
+    if (at == null) return tr('예약 시각을 고르세요');
     final now = DateTime.now();
-    if (!at.isAfter(now)) return '현재 이후로 고르세요';
-    if (at.isAfter(now.add(const Duration(days: 30)))) return '30일 이내로만 예약할 수 있습니다';
+    if (!at.isAfter(now)) return tr('현재 이후로 고르세요');
+    if (at.isAfter(now.add(const Duration(days: 30)))) return tr('30일 이내로만 예약할 수 있습니다');
     return null;
   }
 
@@ -109,7 +110,7 @@ class _NoticeFormScreenState extends ConsumerState<NoticeFormScreen> {
       final n = _editing ? await repo.updateNotice(widget.id!, draft) : await repo.createNotice(draft);
       invalidateNotices(ref, id: n.id);
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(_editing ? '저장했습니다' : (_scheduled ? '예약했습니다' : '학부모 앱으로 보냈습니다'))));
+      messenger.showSnackBar(SnackBar(content: Text(_editing ? tr('저장했습니다') : (_scheduled ? tr('예약했습니다') : tr('학부모 앱으로 보냈습니다')))));
       if (_editing) {
         context.pop();
       } else {
@@ -127,7 +128,7 @@ class _NoticeFormScreenState extends ConsumerState<NoticeFormScreen> {
     final manager = ref.watch(authControllerProvider).membership?.role.isManager ?? false;
     final enabled = !_locked && !_busy;
     return Scaffold(
-      appBar: AppBar(title: Text(_editing ? '예약 알림장 수정' : '알림장 쓰기')),
+      appBar: AppBar(title: Text(_editing ? tr('예약 알림장 수정') : tr('알림장 쓰기'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : GestureDetector(
@@ -136,12 +137,12 @@ class _NoticeFormScreenState extends ConsumerState<NoticeFormScreen> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   if (_locked)
-                    const Padding(padding: EdgeInsets.only(bottom: 12), child: Text('이미 발송되었거나 취소된 알림장은 수정할 수 없습니다.', style: TextStyle(color: AppColors.info))),
+                    Padding(padding: EdgeInsets.only(bottom: 12), child: Text(tr('이미 발송되었거나 취소된 알림장은 수정할 수 없습니다.'), style: TextStyle(color: AppColors.info))),
                   if (manager)
                     SegmentedButton<NoticeKind>(
-                      segments: const [
-                        ButtonSegment(value: NoticeKind.note, label: Text('알림장')),
-                        ButtonSegment(value: NoticeKind.announcement, label: Text('공지')),
+                      segments: [
+                        ButtonSegment(value: NoticeKind.note, label: Text(tr('알림장'))),
+                        ButtonSegment(value: NoticeKind.announcement, label: Text(tr('공지'))),
                       ],
                       selected: {_kind},
                       onSelectionChanged: enabled ? (s) => setState(() => _kind = s.first) : null,
@@ -154,7 +155,7 @@ class _NoticeFormScreenState extends ConsumerState<NoticeFormScreen> {
                     enabled: enabled,
                     maxLength: 100,
                     onChanged: (_) => setState(() {}),
-                    decoration: const InputDecoration(labelText: '제목'),
+                    decoration: InputDecoration(labelText: tr('제목')),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -164,7 +165,7 @@ class _NoticeFormScreenState extends ConsumerState<NoticeFormScreen> {
                     minLines: 8,
                     maxLines: 14,
                     onChanged: (_) => setState(() {}),
-                    decoration: const InputDecoration(labelText: '내용', alignLabelWithHint: true),
+                    decoration: InputDecoration(labelText: tr('내용'), alignLabelWithHint: true),
                   ),
                   const SizedBox(height: 8),
                   AttachmentField(value: _attachments, enabled: enabled, onChanged: (v) => setState(() => _attachments = v)),
@@ -172,15 +173,15 @@ class _NoticeFormScreenState extends ConsumerState<NoticeFormScreen> {
                     CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
                       controlAffinity: ListTileControlAffinity.leading,
-                      title: const Text('학부모 앱 상단에 고정'),
+                      title: Text(tr('학부모 앱 상단에 고정')),
                       value: _pinned,
                       onChanged: enabled ? (v) => setState(() => _pinned = v ?? false) : null,
                     ),
                   const Divider(height: 32),
                   SegmentedButton<bool>(
-                    segments: const [
-                      ButtonSegment(value: false, label: Text('바로 보내기')),
-                      ButtonSegment(value: true, label: Text('예약 발송')),
+                    segments: [
+                      ButtonSegment(value: false, label: Text(tr('바로 보내기'))),
+                      ButtonSegment(value: true, label: Text(tr('예약 발송'))),
                     ],
                     selected: {_scheduled},
                     // 수정은 예약 건만 가능하므로 방식은 바꾸지 않는다
@@ -189,7 +190,7 @@ class _NoticeFormScreenState extends ConsumerState<NoticeFormScreen> {
                   if (_scheduled) ...[
                     const SizedBox(height: 12),
                     DateTimeField(
-                      label: '보낼 시각',
+                      label: tr('보낼 시각'),
                       value: _sendAt,
                       enabled: enabled,
                       first: DateTime.now(),
@@ -199,8 +200,8 @@ class _NoticeFormScreenState extends ConsumerState<NoticeFormScreen> {
                     ),
                   ],
                   const SizedBox(height: 8),
-                  const Text(
-                    '학부모 앱으로 푸시가 갑니다. 열람 여부는 상세 화면의 수신 확인에서 보고, 안 읽은 분께만 다시 보낼 수 있습니다.',
+                  Text(
+                    tr('학부모 앱으로 푸시가 갑니다. 열람 여부는 상세 화면의 수신 확인에서 보고, 안 읽은 분께만 다시 보낼 수 있습니다.'),
                     style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                   if (_error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(_error!, style: const TextStyle(color: AppColors.error))),
@@ -209,7 +210,7 @@ class _NoticeFormScreenState extends ConsumerState<NoticeFormScreen> {
                     onPressed: _valid && !_busy ? _submit : null,
                     child: _busy
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text(_editing ? '저장' : (_scheduled ? '예약하기' : '보내기')),
+                        : Text(_editing ? tr('저장') : (_scheduled ? tr('예약하기') : tr('보내기'))),
                   ),
                   const SizedBox(height: 24),
                 ],

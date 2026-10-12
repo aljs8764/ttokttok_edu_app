@@ -6,6 +6,7 @@ import '../../app/flavor.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
 import '../teacher/models.dart' show Attendance;
+import '../../core/i18n/i18n.dart';
 
 /// 학생앱 API (스펙 7-7). 학생은 계정이 없어 JWT 대신 X-Device-Token 으로 인증한다.
 /// 토큰은 보호자가 만든 8자리 연결 코드로 한 번 받고 secure storage 에 둔다.
@@ -104,7 +105,13 @@ class StudentApi {
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 15),
           contentType: 'application/json',
-        ));
+        )) {
+    // SET-007 실패 안내 문장을 화면 언어로
+    _dio.interceptors.add(InterceptorsWrapper(onRequest: (o, h) {
+      o.headers['Accept-Language'] = currentLocale;
+      h.next(o);
+    }));
+  }
 
   final Dio _dio;
   final FlutterSecureStorage _storage;

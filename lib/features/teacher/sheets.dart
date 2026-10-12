@@ -6,6 +6,7 @@ import '../../core/api/api_error.dart';
 import '../../core/widgets/status_badge.dart';
 import 'models.dart';
 import 'teacher_providers.dart';
+import '../../core/i18n/i18n.dart';
 
 /// ATT-006 하원 — 다음 목적지 고르기 (학부모 하원 푸시에 "→ 셔틀 1호차" 로 함께 간다)
 Future<Destination?> showDestinationSheet(BuildContext context, {required String studentName}) {
@@ -33,7 +34,7 @@ class _DestinationSheet extends ConsumerWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-              child: Text('$studentName 하원 — 어디로 가나요?', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+              child: Text(tr('{0} 하원 — 어디로 가나요?', [studentName]), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
             ),
             Flexible(
               child: dests.when(
@@ -42,13 +43,13 @@ class _DestinationSheet extends ConsumerWidget {
                   padding: const EdgeInsets.all(24),
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
                     Text(errorMessage(e)),
-                    TextButton(onPressed: () => ref.invalidate(destinationsProvider), child: const Text('다시 시도')),
+                    TextButton(onPressed: () => ref.invalidate(destinationsProvider), child: Text(tr('다시 시도'))),
                   ]),
                 ),
                 data: (list) => list.isEmpty
-                    ? const Padding(
+                    ? Padding(
                         padding: EdgeInsets.all(24),
-                        child: Text('등록된 하원 목적지가 없습니다.\n관리자 웹 설정 > 하원 목적지에서 추가해 주세요.', textAlign: TextAlign.center),
+                        child: Text(tr('등록된 하원 목적지가 없습니다.\n관리자 웹 설정 > 하원 목적지에서 추가해 주세요.'), textAlign: TextAlign.center),
                       )
                     : ListView.separated(
                         shrinkWrap: true,
@@ -151,16 +152,16 @@ class _StatusChangeSheetState extends State<_StatusChangeSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(children: [
-              Text('${a.studentName} 출결 수동 변경', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+              Text(tr('{0} 출결 수동 변경', [a.studentName]), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
               const Spacer(),
               StatusBadge(a.status, isLate: a.isLate, isEarlyLeave: a.isEarlyLeave),
             ]),
             const SizedBox(height: 16),
             SegmentedButton<AttendanceStatus>(
-              segments: const [
-                ButtonSegment(value: AttendanceStatus.inClass, label: Text('등원')),
-                ButtonSegment(value: AttendanceStatus.out, label: Text('하원')),
-                ButtonSegment(value: AttendanceStatus.absent, label: Text('결석')),
+              segments: [
+                ButtonSegment(value: AttendanceStatus.inClass, label: Text(tr('등원'))),
+                ButtonSegment(value: AttendanceStatus.out, label: Text(tr('하원'))),
+                ButtonSegment(value: AttendanceStatus.absent, label: Text(tr('결석'))),
               ],
               selected: {_to},
               onSelectionChanged: (s) => setState(() => _to = s.first),
@@ -170,7 +171,7 @@ class _StatusChangeSheetState extends State<_StatusChangeSheet> {
                 contentPadding: EdgeInsets.zero,
                 value: _late,
                 onChanged: (v) => setState(() => _late = v ?? false),
-                title: const Text('지각'),
+                title: Text(tr('지각')),
                 controlAffinity: ListTileControlAffinity.leading,
               ),
             if (_to == AttendanceStatus.out)
@@ -178,7 +179,7 @@ class _StatusChangeSheetState extends State<_StatusChangeSheet> {
                 contentPadding: EdgeInsets.zero,
                 value: _early,
                 onChanged: (v) => setState(() => _early = v ?? false),
-                title: const Text('조퇴'),
+                title: Text(tr('조퇴')),
                 controlAffinity: ListTileControlAffinity.leading,
               ),
             const SizedBox(height: 8),
@@ -189,13 +190,13 @@ class _StatusChangeSheetState extends State<_StatusChangeSheet> {
               maxLines: 4,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                labelText: _to == AttendanceStatus.absent ? '사유 (결석 사유로도 저장)' : '변경 사유',
-                hintText: '예: 잘못 눌러 정정, 어머니 전화로 결석 확인',
+                labelText: _to == AttendanceStatus.absent ? tr('사유 (결석 사유로도 저장)') : tr('변경 사유'),
+                hintText: tr('예: 잘못 눌러 정정, 어머니 전화로 결석 확인'),
               ),
             ),
             if (_error != null) Text(_error!, style: const TextStyle(color: AppColors.error)),
             const SizedBox(height: 8),
-            FilledButton(onPressed: _reason.text.trim().isEmpty || _busy ? null : _save, child: const Text('변경')),
+            FilledButton(onPressed: _reason.text.trim().isEmpty || _busy ? null : _save, child: Text(tr('변경'))),
           ],
         ),
       ),

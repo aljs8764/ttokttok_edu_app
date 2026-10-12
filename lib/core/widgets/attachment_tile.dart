@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../features/parent/models.dart' show FileAttachment;
+import '../i18n/i18n.dart';
 
 /// 알림장 첨부 한 개. 이미지는 바로 보여 주고, PDF 등은 눌러서 외부 앱(브라우저·뷰어)으로 열고 길게 누르면 링크를 복사한다.
 /// 학부모 알림장 상세와 교사 알림장 상세가 같이 쓴다.
@@ -51,13 +52,13 @@ Future<void> _open(BuildContext context, String url) async {
   } catch (_) {}
   if (!ok) {
     await Clipboard.setData(ClipboardData(text: url));
-    messenger.showSnackBar(const SnackBar(content: Text('열 수 있는 앱이 없어 파일 링크를 복사했습니다 (5분 동안 열 수 있어요)')));
+    messenger.showSnackBar(SnackBar(content: Text(tr('열 수 있는 앱이 없어 파일 링크를 복사했습니다 (5분 동안 열 수 있어요)'))));
   }
 }
 
 void _copy(BuildContext context, String url) {
   Clipboard.setData(ClipboardData(text: url));
-  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('파일 링크를 복사했습니다 (5분 동안 열 수 있어요)')));
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('파일 링크를 복사했습니다 (5분 동안 열 수 있어요)'))));
 }
 
 String fileSizeLabel(int n) => n < 1024 * 1024 ? '${(n / 1024).ceil()}KB' : '${(n / 1024 / 1024).toStringAsFixed(1)}MB';

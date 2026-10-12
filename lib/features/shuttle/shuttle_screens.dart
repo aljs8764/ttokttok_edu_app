@@ -14,6 +14,7 @@ import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
 import '../../core/providers.dart';
 import '../parent/parent_providers.dart';
+import '../../core/i18n/i18n.dart';
 
 /// Phase 2 ⑥ ATT-009 셔틀버스 실시간 GPS.
 /// - 교사앱(기사): 노선을 골라 운행 시작 → 폰 위치를 모아 10초마다 서버로 보낸다(안드로이드는 화면이 꺼져도 알림을 띄운 채 계속).
@@ -252,13 +253,13 @@ class _ShuttleDriveScreenState extends ConsumerState<ShuttleDriveScreen> {
 
   Future<bool> _ensurePermission() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
-      setState(() => _error = '휴대폰 위치(GPS)를 켜 주세요');
+      setState(() => _error = tr('휴대폰 위치(GPS)를 켜 주세요'));
       return false;
     }
     var p = await Geolocator.checkPermission();
     if (p == LocationPermission.denied) p = await Geolocator.requestPermission();
     if (p == LocationPermission.denied || p == LocationPermission.deniedForever) {
-      setState(() => _error = '위치 권한이 필요합니다. 설정에서 허용해 주세요');
+      setState(() => _error = tr('위치 권한이 필요합니다. 설정에서 허용해 주세요'));
       if (p == LocationPermission.deniedForever) await Geolocator.openAppSettings();
       return false;
     }
@@ -271,9 +272,9 @@ class _ShuttleDriveScreenState extends ConsumerState<ShuttleDriveScreen> {
         accuracy: LocationAccuracy.high,
         distanceFilter: 10,
         intervalDuration: const Duration(seconds: 5),
-        foregroundNotificationConfig: const ForegroundNotificationConfig(
-          notificationTitle: '셔틀 운행 중',
-          notificationText: '학부모 앱에 셔틀 위치를 보내고 있어요',
+        foregroundNotificationConfig: ForegroundNotificationConfig(
+          notificationTitle: tr('셔틀 운행 중'),
+          notificationText: tr('학부모 앱에 셔틀 위치를 보내고 있어요'),
           enableWakeLock: true,
         ),
       );
@@ -290,7 +291,7 @@ class _ShuttleDriveScreenState extends ConsumerState<ShuttleDriveScreen> {
       _buffer.add({'lat': p.latitude, 'lng': p.longitude, 'recordedAt': p.timestamp.toUtc().toIso8601String()});
       if (_buffer.length > 500) _buffer.removeRange(0, _buffer.length - 500); // 오래 끊기면 오래된 좌표부터 버린다
       _lastSpeed = p.speed >= 0 ? p.speed : null;
-    }, onError: (Object e) => setState(() => _error = '위치를 받지 못했습니다: $e'));
+    }, onError: (Object e) => setState(() => _error = tr('위치를 받지 못했습니다: {0}', [e])));
     _flushTimer?.cancel();
     _flushTimer = Timer.periodic(const Duration(seconds: 10), (_) => _flush());
   }
@@ -321,7 +322,7 @@ class _ShuttleDriveScreenState extends ConsumerState<ShuttleDriveScreen> {
       if (!live.running) _stopTracking();
     } on DioException catch (e) {
       final err = ApiException.from(e);
-      if (mounted) setState(() => _error = '전송 실패(다시 시도합니다): ${err.message}');
+      if (mounted) setState(() => _error = tr('전송 실패(다시 시도합니다): {0}', [err.message]));
       if (e.response?.statusCode == 409 || e.response?.statusCode == 403) _stopTracking();
     } finally {
       _sending = false;
@@ -366,11 +367,11 @@ class _ShuttleDriveScreenState extends ConsumerState<ShuttleDriveScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('운행을 마칠까요?'),
-        content: const Text('위치 전송을 멈추고 학부모 앱에서도 운행 종료로 보입니다.'),
+        title: Text(tr('운행을 마칠까요?')),
+        content: Text(tr('위치 전송을 멈추고 학부모 앱에서도 운행 종료로 보입니다.')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('취소')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('운행 종료')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(tr('취소'))),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(tr('운행 종료'))),
         ],
       ),
     );
@@ -396,11 +397,11 @@ class _ShuttleDriveScreenState extends ConsumerState<ShuttleDriveScreen> {
       canPop: trip == null,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('운행 중에는 나갈 수 없습니다. 먼저 운행을 종료해 주세요')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('운행 중에는 나갈 수 없습니다. 먼저 운행을 종료해 주세요'))));
         }
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(trip == null ? '셔틀 운행' : trip.routeName)),
+        appBar: AppBar(title: Text(trip == null ? tr('셔틀 운행') : trip.routeName)),
         body: trip == null ? _routeList() : _running(trip),
       ),
     );
@@ -412,14 +413,14 @@ class _ShuttleDriveScreenState extends ConsumerState<ShuttleDriveScreen> {
       onRefresh: () async => ref.invalidate(shuttleRoutesProvider),
       child: ListView(padding: const EdgeInsets.all(16), children: [
         if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(_error!, style: const TextStyle(color: AppColors.error))),
-        const Text('운행할 노선을 고르면 이 폰의 위치가 학부모 앱에 실시간으로 보입니다. 운행이 끝나면 꼭 "운행 종료"를 눌러 주세요.',
+        Text(tr('운행할 노선을 고르면 이 폰의 위치가 학부모 앱에 실시간으로 보입니다. 운행이 끝나면 꼭 "운행 종료"를 눌러 주세요.'),
             style: TextStyle(color: AppColors.textSecondary)),
         const SizedBox(height: 12),
         ...routes.when(
           loading: () => [const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()))],
           error: (e, _) => [Text(ApiException.from(e).message, style: const TextStyle(color: AppColors.error))],
           data: (list) => list.isEmpty
-              ? [const Text('등록된 노선이 없습니다. 관리자 웹 "셔틀 관제"에서 노선을 먼저 만들어 주세요.')]
+              ? [Text(tr('등록된 노선이 없습니다. 관리자 웹 "셔틀 관제"에서 노선을 먼저 만들어 주세요.'))]
               : [
                   for (final r in list)
                     Card(
@@ -433,7 +434,7 @@ class _ShuttleDriveScreenState extends ConsumerState<ShuttleDriveScreen> {
                         ].join(' · ')),
                         trailing: FilledButton(
                           onPressed: _busy || r.stopCount == 0 ? null : () => _start(r),
-                          child: Text(r.runningTripId != null ? '이어서 운행' : '출발'),
+                          child: Text(r.runningTripId != null ? tr('이어서 운행') : tr('출발')),
                         ),
                       ),
                     ),
@@ -453,7 +454,7 @@ class _ShuttleDriveScreenState extends ConsumerState<ShuttleDriveScreen> {
         const SizedBox(width: 6),
         Expanded(
           child: Text(
-            _lastSent == null ? '위치 전송 준비 중…' : '${_hms.format(_lastSent!)} 전송 · ${_hm.format(trip.startedAt)} 출발',
+            _lastSent == null ? tr('위치 전송 준비 중…') : tr('{0} 전송 · {1} 출발', [_hms.format(_lastSent!), _hm.format(trip.startedAt)]),
             style: const TextStyle(color: AppColors.textSecondary),
           ),
         ),
@@ -467,17 +468,17 @@ class _ShuttleDriveScreenState extends ConsumerState<ShuttleDriveScreen> {
               dense: true,
               leading: CircleAvatar(radius: 12, backgroundColor: s.passed ? AppColors.muted : AppColors.primary, child: Text('${s.seq}', style: const TextStyle(fontSize: 11, color: Colors.white))),
               title: Text(s.name, style: TextStyle(color: s.passed ? AppColors.muted : null)),
-              trailing: Text(s.passed ? '지남' : (s.etaMinutes != null ? '약 ${s.etaMinutes}분' : '-')),
+              trailing: Text(s.passed ? tr('지남') : (s.etaMinutes != null ? tr('약 {0}분', [s.etaMinutes]) : '-')),
             ),
         ]),
       ),
       const SizedBox(height: 16),
-      if (next.isEmpty) const Text('모든 정류장을 지났습니다.', textAlign: TextAlign.center),
+      if (next.isEmpty) Text(tr('모든 정류장을 지났습니다.'), textAlign: TextAlign.center),
       FilledButton.icon(
         style: FilledButton.styleFrom(backgroundColor: AppColors.error, minimumSize: const Size.fromHeight(48)),
         onPressed: _busy ? null : _end,
         icon: const Icon(Icons.stop_circle_outlined),
-        label: const Text('운행 종료'),
+        label: Text(tr('운행 종료')),
       ),
     ]);
   }
@@ -520,7 +521,7 @@ class _MyShuttleScreenState extends ConsumerState<MyShuttleScreen> {
   Widget build(BuildContext context) {
     final list = ref.watch(myShuttlesProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('셔틀 위치')),
+      appBar: AppBar(title: Text(tr('셔틀 위치'))),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(myShuttlesProvider),
         child: list.when(
@@ -529,10 +530,10 @@ class _MyShuttleScreenState extends ConsumerState<MyShuttleScreen> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => ListView(children: [Padding(padding: const EdgeInsets.all(24), child: Text(ApiException.from(e).message))]),
           data: (items) => items.isEmpty
-              ? ListView(children: const [
+              ? ListView(children: [
                   Padding(
                     padding: EdgeInsets.all(24),
-                    child: Text('셔틀을 이용하는 아이가 없습니다. 학원에서 셔틀 탑승 정류장을 등록하면 여기에 보입니다.', textAlign: TextAlign.center),
+                    child: Text(tr('셔틀을 이용하는 아이가 없습니다. 학원에서 셔틀 탑승 정류장을 등록하면 여기에 보입니다.'), textAlign: TextAlign.center),
                   ),
                 ])
               : ListView(padding: const EdgeInsets.all(16), children: [for (final s in items) _ShuttleCard(item: s)]),
@@ -548,12 +549,12 @@ class _ShuttleCard extends StatelessWidget {
 
   String get _status {
     final t = item.trip;
-    if (t == null) return '지금은 운행 중이 아니에요';
-    if (t.passed) return '${item.stopName} 정류장을 지났어요';
-    if (t.position == null) return '출발했어요 · 위치를 받는 중이에요';
+    if (t == null) return tr('지금은 운행 중이 아니에요');
+    if (t.passed) return tr('{0} 정류장을 지났어요', [item.stopName]);
+    if (t.position == null) return tr('출발했어요 · 위치를 받는 중이에요');
     final eta = t.etaMinutes;
-    final head = eta == null ? '이동 중' : (eta <= 1 ? '곧 도착해요' : '약 $eta분 뒤 도착');
-    return t.stopsBefore > 0 ? '$head · 정류장 ${t.stopsBefore}곳 전' : head;
+    final head = eta == null ? tr('이동 중') : (eta <= 1 ? tr('곧 도착해요') : tr('약 {0}분 뒤 도착', [eta]));
+    return t.stopsBefore > 0 ? tr('{0} · 정류장 {1}곳 전', [head, t.stopsBefore]) : head;
   }
 
   @override
@@ -567,7 +568,7 @@ class _ShuttleCard extends StatelessWidget {
           Text('${item.studentName} · ${item.institutionName}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
           const SizedBox(height: 2),
           Text('${item.routeName}${item.vehicleName != null ? ' · ${item.vehicleName}' : ''}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-          Text('타는 곳: ${item.stopName}'),
+          Text(tr('타는 곳: {0}', [item.stopName])),
           const SizedBox(height: 8),
           Row(children: [
             Icon(Icons.directions_bus_rounded, color: t == null ? AppColors.muted : AppColors.warning),
@@ -575,12 +576,12 @@ class _ShuttleCard extends StatelessWidget {
             Expanded(child: Text(_status, style: const TextStyle(fontWeight: FontWeight.w600))),
           ]),
           if (t != null && t.stale)
-            const Padding(
+            Padding(
               padding: EdgeInsets.only(top: 4),
-              child: Text('잠시 위치 신호가 끊겼어요. 마지막 위치를 보여 드려요.', style: TextStyle(color: AppColors.warning, fontSize: 12)),
+              child: Text(tr('잠시 위치 신호가 끊겼어요. 마지막 위치를 보여 드려요.'), style: TextStyle(color: AppColors.warning, fontSize: 12)),
             ),
           if (t?.position != null)
-            Text('${_hms.format(t!.position!.at)} 기준', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            Text(tr('{0} 기준', [_hms.format(t!.position!.at)]), style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
           const SizedBox(height: 8),
           ShuttleMap(stops: const [], vehicle: t?.position?.point, highlight: item.stop, height: 220, vehicleStale: t?.stale ?? false),
           if (item.driverPhone != null)
@@ -589,10 +590,10 @@ class _ShuttleCard extends StatelessWidget {
               child: TextButton.icon(
                 onPressed: () => launchUrl(Uri.parse('tel:${item.driverPhone}')),
                 icon: const Icon(Icons.call_outlined, size: 18),
-                label: const Text('기사님께 전화'),
+                label: Text(tr('기사님께 전화')),
               ),
             ),
-          const Text('도착 예정은 직선거리와 평균 속도로 계산한 추정치예요.', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+          Text(tr('도착 예정은 직선거리와 평균 속도로 계산한 추정치예요.'), style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
         ]),
       ),
     );

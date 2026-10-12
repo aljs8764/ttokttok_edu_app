@@ -1,4 +1,5 @@
 import '../parent/models.dart' show FileAttachment;
+import '../../core/i18n/i18n.dart';
 
 DateTime? _t(Object? v) => v == null ? null : DateTime.parse(v as String).toLocal();
 
@@ -91,8 +92,8 @@ class AbsenceRequest {
   final String status;
   final String? expectedTime;
 
-  String get kindLabel => const {'ABSENT': '결석', 'LATE': '지각', 'EARLY_LEAVE': '조퇴'}[kind] ?? kind;
-  String get statusLabel => const {'SUBMITTED': '확인 대기', 'ACKNOWLEDGED': '확인함', 'CANCELLED': '취소'}[status] ?? status;
+  String get kindLabel => tr(const {'ABSENT': '결석', 'LATE': '지각', 'EARLY_LEAVE': '조퇴'}[kind] ?? kind);
+  String get statusLabel => tr(const {'SUBMITTED': '확인 대기', 'ACKNOWLEDGED': '확인함', 'CANCELLED': '취소'}[status] ?? status);
 
   factory AbsenceRequest.fromJson(Map<String, dynamic> j) => AbsenceRequest(
         id: j['id'] as String,

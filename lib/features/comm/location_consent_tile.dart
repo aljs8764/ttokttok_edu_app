@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_error.dart';
 import 'comm_repository.dart';
+import '../../core/i18n/i18n.dart';
 
 /// PAR-008 위치 정보 제공 동의 — 끄면 학생앱이 위치를 보내지 않아도 되지만, 위치 확인이 켜진 QR 출석은 처리되지 않을 수 있다
 class LocationConsentTile extends ConsumerStatefulWidget {
@@ -43,8 +44,8 @@ class _LocationConsentTileState extends ConsumerState<LocationConsentTile> {
       dense: true,
       contentPadding: const EdgeInsets.only(left: 4, right: 4),
       secondary: const Icon(Icons.location_on_outlined, size: 20),
-      title: const Text('위치 정보 제공 동의'),
-      subtitle: const Text('학생앱 QR 출석 때 현재 위치를 학원에 확인받는 데 씁니다'),
+      title: Text(tr('위치 정보 제공 동의')),
+      subtitle: Text(tr('학생앱 QR 출석 때 현재 위치를 학원에 확인받는 데 씁니다')),
       value: _granted ?? true,
       onChanged: _granted == null || _busy ? null : _set,
     );

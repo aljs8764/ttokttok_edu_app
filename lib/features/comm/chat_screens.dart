@@ -10,6 +10,7 @@ import '../../core/api/api_error.dart';
 import '../../core/realtime/stomp_service.dart';
 import 'comm_models.dart';
 import 'comm_repository.dart';
+import '../../core/i18n/i18n.dart';
 
 /// 대화 목록 — 학부모(`staff: false`)와 교직원(`staff: true`)이 같이 쓴다.
 /// 새 메시지가 오면(/user/queue/events chat.message) 목록을 다시 읽는다.
@@ -47,7 +48,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       error: (e, _) => Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Text(errorMessage(e)),
-          TextButton(onPressed: () => ref.invalidate(conversationsProvider(widget.staff)), child: const Text('다시 시도')),
+          TextButton(onPressed: () => ref.invalidate(conversationsProvider(widget.staff)), child: Text(tr('다시 시도'))),
         ]),
       ),
       data: (items) => RefreshIndicator(
@@ -57,7 +58,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                 const SizedBox(height: 120),
                 Center(
                   child: Text(
-                    widget.staff ? '아직 대화가 없습니다.\n학부모가 알림장에 회신하거나 말을 걸면 여기에 모입니다.' : '아직 대화가 없습니다.\n알림장에서 "선생님께 회신"을 눌러 시작해 보세요.',
+                    widget.staff ? tr('아직 대화가 없습니다.\n학부모가 알림장에 회신하거나 말을 걸면 여기에 모입니다.') : tr('아직 대화가 없습니다.\n알림장에서 "선생님께 회신"을 눌러 시작해 보세요.'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: AppColors.textSecondary, height: 1.5),
                   ),
@@ -70,7 +71,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               ),
       ),
     );
-    return Scaffold(appBar: AppBar(title: const Text('메시지')), body: body);
+    return Scaffold(appBar: AppBar(title: Text(tr('메시지'))), body: body);
   }
 
   Widget _tile(BuildContext context, Conversation c) {
@@ -78,7 +79,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     return ListTile(
       title: Text(title, style: TextStyle(fontWeight: c.unread > 0 ? FontWeight.w800 : FontWeight.w600)),
       subtitle: Text(
-        [if (c.noticeTitle != null) '[회신] ${c.noticeTitle}', c.lastMessagePreview ?? '대화를 시작해 보세요'].join('\n'),
+        [if (c.noticeTitle != null) tr('[회신] {0}', [c.noticeTitle]), c.lastMessagePreview ?? tr('대화를 시작해 보세요')].join('\n'),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
@@ -196,7 +197,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                   minLines: 1,
                   maxLines: 4,
                   maxLength: 2000,
-                  decoration: const InputDecoration(hintText: '메시지를 입력하세요', counterText: '', border: OutlineInputBorder(), isDense: true),
+                  decoration: InputDecoration(hintText: tr('메시지를 입력하세요'), counterText: '', border: OutlineInputBorder(), isDense: true),
                 ),
               ),
               IconButton(onPressed: _sending ? null : _send, icon: const Icon(Icons.send), color: AppColors.primary),

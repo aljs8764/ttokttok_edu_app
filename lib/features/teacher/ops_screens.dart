@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
 import '../../core/providers.dart';
+import '../../core/i18n/i18n.dart';
 
 /// Phase 2 ③ 교사앱 — CLS 건강 주의(알레르기) 배지, STF-004 교직원 출퇴근.
 
@@ -55,10 +56,10 @@ class HealthAlertBanner extends ConsumerWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Row(children: [
+        Row(children: [
           Icon(Icons.warning_amber_rounded, size: 18, color: AppColors.error),
           SizedBox(width: 6),
-          Text('알레르기 주의', style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.error)),
+          Text(tr('알레르기 주의'), style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.error)),
         ]),
         const SizedBox(height: 6),
         for (final a in alerts) Text('${a.studentName} · ${a.allergies}', style: const TextStyle(fontSize: 13)),
@@ -96,35 +97,35 @@ class _StaffCheckInScreenState extends ConsumerState<StaffCheckInScreen> {
   Widget build(BuildContext context) {
     final today = ref.watch(staffTodayProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('출퇴근')),
+      appBar: AppBar(title: Text(tr('출퇴근'))),
       body: today.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(errorMessage(e), style: const TextStyle(color: AppColors.textSecondary))),
         data: (rec) {
           final done = rec?.checkOut != null;
           final status = rec == null
-              ? '아직 출근 전입니다'
+              ? tr('아직 출근 전입니다')
               : done
-                  ? '출근 ${_hm.format(rec.checkIn)} · 퇴근 ${_hm.format(rec.checkOut!)}'
-                  : '${_hm.format(rec.checkIn)} 출근 · 근무 중';
+                  ? tr('출근 {0} · 퇴근 {1}', [_hm.format(rec.checkIn), _hm.format(rec.checkOut!)])
+                  : tr('{0} 출근 · 근무 중', [_hm.format(rec.checkIn)]);
           return Padding(
             padding: const EdgeInsets.all(24),
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Text('${DateTime.now().month}월 ${DateTime.now().day}일', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+              Text(tr('{0}월 {1}일', [DateTime.now().month, DateTime.now().day]), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
               Text(status, style: const TextStyle(color: AppColors.textSecondary)),
-              if (done && rec.workedMinutes != null) Text('근무 ${rec.workedMinutes! ~/ 60}시간 ${rec.workedMinutes! % 60}분'),
+              if (done && rec.workedMinutes != null) Text(tr('근무 {0}시간 {1}분', [rec.workedMinutes! ~/ 60, rec.workedMinutes! % 60])),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
                 height: 56,
-                child: FilledButton(onPressed: _busy || rec != null ? null : () => _act('check-in'), child: const Text('출근')),
+                child: FilledButton(onPressed: _busy || rec != null ? null : () => _act('check-in'), child: Text(tr('출근'))),
               ),
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 height: 56,
-                child: OutlinedButton(onPressed: _busy || rec == null || done ? null : () => _act('check-out'), child: const Text('퇴근')),
+                child: OutlinedButton(onPressed: _busy || rec == null || done ? null : () => _act('check-out'), child: Text(tr('퇴근'))),
               ),
             ]),
           );

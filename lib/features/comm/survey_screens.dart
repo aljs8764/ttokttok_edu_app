@@ -6,6 +6,7 @@ import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
 import 'comm_models.dart';
 import 'comm_repository.dart';
+import '../../core/i18n/i18n.dart';
 
 /// NTC-010 학부모: 받은 설문 (진행 중 먼저)
 class SurveyListScreen extends ConsumerWidget {
@@ -15,14 +16,14 @@ class SurveyListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final list = ref.watch(surveysProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('설문')),
+      appBar: AppBar(title: Text(tr('설문'))),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(surveysProvider),
         child: list.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text(errorMessage(e))),
           data: (items) => items.isEmpty
-              ? ListView(children: const [SizedBox(height: 120), Center(child: Text('받은 설문이 없습니다', style: TextStyle(color: AppColors.textSecondary)))])
+              ? ListView(children: [SizedBox(height: 120), Center(child: Text(tr('받은 설문이 없습니다'), style: TextStyle(color: AppColors.textSecondary)))])
               : ListView.separated(
                   itemCount: items.length,
                   separatorBuilder: (_, __) => const Divider(height: 1),
@@ -32,11 +33,11 @@ class SurveyListScreen extends ConsumerWidget {
                       title: Text(s.title, style: TextStyle(fontWeight: s.needsAnswer ? FontWeight.w800 : FontWeight.w500)),
                       subtitle: Text([
                         s.institutionName,
-                        if (s.closesAt != null) '마감 ${DateFormat('M/d HH:mm').format(s.closesAt!)}',
+                        if (s.closesAt != null) tr('마감 {0}', [DateFormat('M/d HH:mm').format(s.closesAt!)]),
                       ].join(' · ')),
                       trailing: s.needsAnswer
-                          ? const Chip(label: Text('응답하기'))
-                          : Text(s.open ? '응답 완료' : '마감', style: const TextStyle(color: AppColors.textSecondary)),
+                          ? Chip(label: Text(tr('응답하기')))
+                          : Text(s.open ? tr('응답 완료') : tr('마감'), style: const TextStyle(color: AppColors.textSecondary)),
                       onTap: () async {
                         await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => SurveyAnswerScreen(survey: s)));
                         ref.invalidate(surveysProvider);
@@ -94,7 +95,7 @@ class _SurveyAnswerScreenState extends ConsumerState<SurveyAnswerScreen> {
       _doneNow.add(_studentId!);
       final next = s.children.where((c) => !_doneNow.contains(c.studentId)).map((c) => c.studentId).firstOrNull;
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('응답을 보냈습니다')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('응답을 보냈습니다'))));
       if (next == null) {
         Navigator.pop(context);
       } else {
@@ -122,14 +123,14 @@ class _SurveyAnswerScreenState extends ConsumerState<SurveyAnswerScreen> {
       appBar: AppBar(title: Text(s.title, overflow: TextOverflow.ellipsis)),
       body: ListView(padding: const EdgeInsets.all(20), children: [
         if (s.description != null) Padding(padding: const EdgeInsets.only(bottom: 16), child: Text(s.description!, style: const TextStyle(height: 1.5))),
-        if (!s.open) const Text('마감된 설문입니다.', style: TextStyle(color: AppColors.textSecondary)),
-        if (s.open && _studentId == null) const Text('모든 자녀의 응답을 마쳤습니다.', style: TextStyle(color: AppColors.textSecondary)),
+        if (!s.open) Text(tr('마감된 설문입니다.'), style: TextStyle(color: AppColors.textSecondary)),
+        if (s.open && _studentId == null) Text(tr('모든 자녀의 응답을 마쳤습니다.'), style: TextStyle(color: AppColors.textSecondary)),
         if (editable && s.children.length > 1)
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: DropdownButtonFormField<String>(
               value: _studentId,
-              decoration: const InputDecoration(labelText: '응답할 아이'),
+              decoration: InputDecoration(labelText: tr('응답할 아이')),
               items: [for (final c in s.children.where((c) => !_doneNow.contains(c.studentId))) DropdownMenuItem(value: c.studentId, child: Text(c.name))],
               onChanged: (v) => setState(() => _studentId = v),
             ),
@@ -141,7 +142,7 @@ class _SurveyAnswerScreenState extends ConsumerState<SurveyAnswerScreen> {
             _input(q),
             const SizedBox(height: 20),
           ],
-        if (editable) FilledButton(onPressed: _valid && !_busy ? _submit : null, child: const Text('제출')),
+        if (editable) FilledButton(onPressed: _valid && !_busy ? _submit : null, child: Text(tr('제출'))),
       ]),
     );
   }

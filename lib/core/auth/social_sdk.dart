@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_naver_login/flutter_naver_login.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
+import '../i18n/i18n.dart';
 
 /// AUTH-006 카카오·네이버 SDK 로그인 → 서비스 서버로 보낼 access token.
 /// 키는 빌드할 때 넣는다 (README):
@@ -12,7 +13,7 @@ enum SocialKind { kakao, naver }
 
 extension SocialKindX on SocialKind {
   String get api => name.toUpperCase();
-  String get label => this == SocialKind.kakao ? '카카오' : '네이버';
+  String get label => this == SocialKind.kakao ? tr('카카오') : tr('네이버');
 }
 
 const _kakaoKey = String.fromEnvironment('KAKAO_NATIVE_APP_KEY');

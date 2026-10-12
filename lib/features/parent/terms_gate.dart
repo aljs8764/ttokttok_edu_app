@@ -7,6 +7,7 @@ import '../../core/auth/auth_controller.dart';
 import 'models.dart';
 import 'parent_providers.dart';
 import 'parent_repository.dart';
+import '../../core/i18n/i18n.dart';
 
 /// SET-005 학부모 약관 재동의 — 개정되어 아직 동의하지 않은 약관이 있으면 띄운다.
 /// 필수 약관이 남아 있으면 닫을 수 없다(동의 또는 로그아웃).
@@ -61,14 +62,14 @@ class _TermsDialogState extends ConsumerState<_TermsDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('약관이 개정되었습니다'),
+      title: Text(tr('약관이 개정되었습니다')),
       content: SizedBox(
         width: double.maxFinite,
         child: ListView(
           shrinkWrap: true,
           children: [
             Text(
-              widget.blocking ? '계속 이용하려면 필수 약관에 동의해 주세요.' : '선택 약관은 동의하지 않아도 이용할 수 있습니다.',
+              widget.blocking ? tr('계속 이용하려면 필수 약관에 동의해 주세요.') : tr('선택 약관은 동의하지 않아도 이용할 수 있습니다.'),
               style: const TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 8),
@@ -79,10 +80,10 @@ class _TermsDialogState extends ConsumerState<_TermsDialog> {
       ),
       actions: [
         if (widget.blocking)
-          TextButton(onPressed: () => ref.read(authControllerProvider.notifier).logout(), child: const Text('로그아웃'))
+          TextButton(onPressed: () => ref.read(authControllerProvider.notifier).logout(), child: Text(tr('로그아웃')))
         else
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('나중에')),
-        FilledButton(onPressed: _allRequired && _checked.isNotEmpty && !_busy ? _agree : null, child: const Text('동의')),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('나중에'))),
+        FilledButton(onPressed: _allRequired && _checked.isNotEmpty && !_busy ? _agree : null, child: Text(tr('동의'))),
       ],
     );
   }
@@ -111,10 +112,10 @@ class TermsCheckTile extends StatelessWidget {
           builder: (_) => AlertDialog(
             title: Text(terms.title),
             content: SingleChildScrollView(child: Text(terms.body)),
-            actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('닫기'))],
+            actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('닫기')))],
           ),
         ),
-        child: const Text('보기'),
+        child: Text(tr('보기')),
       ),
     ]);
   }

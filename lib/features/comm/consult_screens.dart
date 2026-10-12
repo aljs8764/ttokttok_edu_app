@@ -8,11 +8,12 @@ import '../../core/api/api_error.dart';
 import '../../core/providers.dart';
 import '../parent/models.dart';
 import '../parent/parent_providers.dart';
+import '../../core/i18n/i18n.dart';
 
 /// NTC-008 후반 상담 예약 (학부모: 빈 시간 고르기·내 예약 / 교사: 내 상담 목록)
 /// + STU-010 상담일지·CLS-003 시간표 학부모 화면 (API 는 ③에서 만들어 둠)
 
-final _md = DateFormat('M월 d일 (E)', 'ko_KR');
+DateFormat get _md => DateFormat(tr('M월 d일 (E)'), dateLocale());
 final _hm = DateFormat('HH:mm');
 Options get _me => Options(extra: {'noInstitution': true});
 
@@ -70,7 +71,7 @@ final myConsultsProvider = FutureProvider.autoDispose<List<ConsultSlot>>((ref) a
   return _slots(r.data);
 });
 
-String _statusLabel(String s) => switch (s) { 'BOOKED' => '예약됨', 'DONE' => '상담 완료', 'CANCELED' => '취소됨', _ => '예약 가능' };
+String _statusLabel(String s) => switch (s) { 'BOOKED' => tr('예약됨'), 'DONE' => tr('상담 완료'), 'CANCELED' => tr('취소됨'), _ => tr('예약 가능') };
 
 // ───────── 학부모: 상담 예약 ─────────
 class ParentConsultScreen extends ConsumerWidget {
@@ -81,7 +82,7 @@ class ParentConsultScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(title: const Text('상담 예약'), bottom: const TabBar(tabs: [Tab(text: '예약하기'), Tab(text: '내 예약')])),
+        appBar: AppBar(title: Text(tr('상담 예약')), bottom: TabBar(tabs: [Tab(text: tr('예약하기')), Tab(text: tr('내 예약'))])),
         body: const TabBarView(children: [_Available(), _Mine()]),
       ),
     );
@@ -101,8 +102,8 @@ class _Available extends ConsumerWidget {
         error: (e, _) => ListView(children: [Padding(padding: const EdgeInsets.all(24), child: Text(errorMessage(e)))]),
         data: (slots) {
           if (slots.isEmpty) {
-            return ListView(children: const [
-              Padding(padding: EdgeInsets.all(24), child: Text('지금 예약할 수 있는 상담 시간이 없습니다.\n선생님이 상담 시간을 열면 여기에 보입니다.', textAlign: TextAlign.center)),
+            return ListView(children: [
+              Padding(padding: EdgeInsets.all(24), child: Text(tr('지금 예약할 수 있는 상담 시간이 없습니다.\n선생님이 상담 시간을 열면 여기에 보입니다.'), textAlign: TextAlign.center)),
             ]);
           }
           final days = <String, List<ConsultSlot>>{};
@@ -115,7 +116,7 @@ class _Available extends ConsumerWidget {
               for (final s in e.value)
                 Card(
                   child: ListTile(
-                    title: Text('${s.timeLabel} · ${s.teacherName} 선생님'),
+                    title: Text(tr('{0} · {1} 선생님', [s.timeLabel, s.teacherName])),
                     subtitle: Text('${s.institutionName} · ${s.modeLabel}${s.location != null ? ' · ${s.location}' : ''}'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => _book(context, ref, s),
@@ -144,7 +145,7 @@ class _Available extends ConsumerWidget {
     if (ok == true) {
       ref.invalidate(availableConsultsProvider);
       ref.invalidate(myConsultsProvider);
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('상담을 예약했어요. 선생님께 알림이 갔습니다.')));
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('상담을 예약했어요. 선생님께 알림이 갔습니다.'))));
     }
   }
 }
@@ -193,20 +194,20 @@ class _BookSheetState extends ConsumerState<_BookSheet> {
       padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(context).viewInsets.bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text('${_md.format(s.startsAt)} ${s.timeLabel}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-        Text('${s.teacherName} 선생님 · ${s.modeLabel}${s.location != null ? ' · ${s.location}' : ''}', style: const TextStyle(color: AppColors.textSecondary)),
+        Text(tr('{0} 선생님 · {1}{2}', [s.teacherName, s.modeLabel, s.location != null ? ' · ${s.location}' : '']), style: const TextStyle(color: AppColors.textSecondary)),
         const SizedBox(height: 16),
         if (widget.students.length > 1)
           DropdownButtonFormField<String>(
             initialValue: _studentId,
-            decoration: const InputDecoration(labelText: '자녀'),
+            decoration: InputDecoration(labelText: tr('자녀')),
             items: [for (final e in widget.students) DropdownMenuItem(value: e.studentId, child: Text(e.studentName))],
             onChanged: (v) => setState(() => _studentId = v ?? _studentId),
           ),
         const SizedBox(height: 12),
-        TextField(controller: _topic, maxLength: 300, maxLines: 3, decoration: const InputDecoration(labelText: '상담하고 싶은 내용 (선택)')),
+        TextField(controller: _topic, maxLength: 300, maxLines: 3, decoration: InputDecoration(labelText: tr('상담하고 싶은 내용 (선택)'))),
         if (_error != null) Text(_error!, style: const TextStyle(color: AppColors.error)),
         const SizedBox(height: 8),
-        FilledButton(onPressed: _busy ? null : _submit, child: const Text('예약하기')),
+        FilledButton(onPressed: _busy ? null : _submit, child: Text(tr('예약하기'))),
       ]),
     );
   }
@@ -224,7 +225,7 @@ class _Mine extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ListView(children: [Padding(padding: const EdgeInsets.all(24), child: Text(errorMessage(e)))]),
         data: (slots) => slots.isEmpty
-            ? ListView(children: const [Padding(padding: EdgeInsets.all(24), child: Text('예약한 상담이 없습니다.', textAlign: TextAlign.center))])
+            ? ListView(children: [Padding(padding: EdgeInsets.all(24), child: Text(tr('예약한 상담이 없습니다.'), textAlign: TextAlign.center))])
             : ListView(padding: const EdgeInsets.all(16), children: [
                 for (final s in slots)
                   Card(
@@ -237,7 +238,7 @@ class _Mine extends ConsumerWidget {
                       ].join('\n')),
                       isThreeLine: true,
                       trailing: s.status == 'BOOKED' && s.startsAt.isAfter(DateTime.now())
-                          ? TextButton(onPressed: () => _cancel(context, ref, s), child: const Text('취소'))
+                          ? TextButton(onPressed: () => _cancel(context, ref, s), child: Text(tr('취소')))
                           : null,
                     ),
                   ),
@@ -250,9 +251,9 @@ class _Mine extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('예약을 취소할까요?'),
-        content: Text('${_md.format(s.startsAt)} ${s.timeLabel} ${s.teacherName} 선생님 상담'),
-        actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('아니요')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('취소하기'))],
+        title: Text(tr('예약을 취소할까요?')),
+        content: Text(tr('{0} {1} {2} 선생님 상담', [_md.format(s.startsAt), s.timeLabel, s.teacherName])),
+        actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: Text(tr('아니요'))), FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(tr('취소하기')))],
       ),
     );
     if (ok != true) return;
@@ -288,15 +289,15 @@ class TeacherConsultScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final list = ref.watch(teacherConsultsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('상담 예약')),
+      appBar: AppBar(title: Text(tr('상담 예약'))),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(teacherConsultsProvider),
         child: list.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => ListView(children: [Padding(padding: const EdgeInsets.all(24), child: Text(errorMessage(e)))]),
           data: (slots) => slots.isEmpty
-              ? ListView(children: const [
-                  Padding(padding: EdgeInsets.all(24), child: Text('앞으로 2주 동안 열린 상담 시간이 없습니다.\n상담 시간은 관리자 웹 "상담 예약"에서 엽니다.', textAlign: TextAlign.center)),
+              ? ListView(children: [
+                  Padding(padding: EdgeInsets.all(24), child: Text(tr('앞으로 2주 동안 열린 상담 시간이 없습니다.\n상담 시간은 관리자 웹 "상담 예약"에서 엽니다.'), textAlign: TextAlign.center)),
                 ])
               : ListView(padding: const EdgeInsets.all(16), children: [
                   for (final s in slots)
@@ -309,7 +310,7 @@ class TeacherConsultScreen extends ConsumerWidget {
                         trailing: s.status == 'BOOKED'
                             ? PopupMenuButton<String>(
                                 onSelected: (op) => _act(context, ref, s, op),
-                                itemBuilder: (_) => const [PopupMenuItem(value: 'done', child: Text('상담 완료')), PopupMenuItem(value: 'cancel', child: Text('취소(학부모에게 알림)'))],
+                                itemBuilder: (_) => [PopupMenuItem(value: 'done', child: Text(tr('상담 완료'))), PopupMenuItem(value: 'cancel', child: Text(tr('취소(학부모에게 알림)')))],
                               )
                             : Text(_statusLabel(s.status), style: const TextStyle(color: AppColors.textSecondary)),
                       ),
@@ -335,14 +336,14 @@ class CounselNotesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final list = ref.watch(myCounselNotesProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('상담 기록')),
+      appBar: AppBar(title: Text(tr('상담 기록'))),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(myCounselNotesProvider),
         child: list.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => ListView(children: [Padding(padding: const EdgeInsets.all(24), child: Text(errorMessage(e)))]),
           data: (notes) => notes.isEmpty
-              ? ListView(children: const [Padding(padding: EdgeInsets.all(24), child: Text('선생님이 공개한 상담 기록이 없습니다.', textAlign: TextAlign.center))])
+              ? ListView(children: [Padding(padding: EdgeInsets.all(24), child: Text(tr('선생님이 공개한 상담 기록이 없습니다.'), textAlign: TextAlign.center))])
               : ListView(padding: const EdgeInsets.all(16), children: [
                   for (final n in notes)
                     Card(
@@ -356,7 +357,7 @@ class CounselNotesScreen extends ConsumerWidget {
                           const SizedBox(height: 6),
                           Text(n['body'] as String? ?? '', style: const TextStyle(height: 1.4)),
                           const SizedBox(height: 6),
-                          Text('${(n['author'] as Map<String, dynamic>?)?['name'] ?? ''} 선생님', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                          Text(tr('{0} 선생님', [(n['author'] as Map<String, dynamic>?)?['name'] ?? '']), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                         ]),
                       ),
                     ),
@@ -389,7 +390,7 @@ class TimetableScreen extends ConsumerWidget {
     final list = ref.watch(myTimetableProvider);
     final today = DateTime.now().weekday;
     return Scaffold(
-      appBar: AppBar(title: const Text('주간 시간표')),
+      appBar: AppBar(title: Text(tr('주간 시간표'))),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(myTimetableProvider),
         child: list.when(
@@ -397,7 +398,7 @@ class TimetableScreen extends ConsumerWidget {
           error: (e, _) => ListView(children: [Padding(padding: const EdgeInsets.all(24), child: Text(errorMessage(e)))]),
           data: (slots) {
             if (slots.isEmpty) {
-              return ListView(children: const [Padding(padding: EdgeInsets.all(24), child: Text('학원에서 등록한 시간표가 없습니다.', textAlign: TextAlign.center))]);
+              return ListView(children: [Padding(padding: EdgeInsets.all(24), child: Text(tr('학원에서 등록한 시간표가 없습니다.'), textAlign: TextAlign.center))]);
             }
             final byDay = <int, List<Map<String, dynamic>>>{};
             for (final s in slots) {
@@ -411,7 +412,7 @@ class TimetableScreen extends ConsumerWidget {
               for (final d in days) ...[
                 Padding(
                   padding: const EdgeInsets.only(top: 8, bottom: 6),
-                  child: Text('${_weekdays[(d - 1).clamp(0, 6)]}요일${d == today ? ' · 오늘' : ''}',
+                  child: Text(tr('{0}요일', [tr(_weekdays[(d - 1).clamp(0, 6)])]) + (d == today ? tr(' · 오늘') : ''),
                       style: TextStyle(fontWeight: FontWeight.w700, color: d == today ? AppColors.accent : null)),
                 ),
                 for (final s in byDay[d]!)
@@ -424,7 +425,7 @@ class TimetableScreen extends ConsumerWidget {
                         s['institutionName'],
                         s['classroomName'],
                         if (s['room'] != null) s['room'],
-                        if ((s['teacher'] as Map<String, dynamic>?)?['name'] != null) '${(s['teacher'] as Map<String, dynamic>)['name']} 선생님',
+                        if ((s['teacher'] as Map<String, dynamic>?)?['name'] != null) tr('{0} 선생님', [(s['teacher'] as Map<String, dynamic>)['name']]),
                       ].whereType<String>().join(' · ')),
                     ),
                   ),

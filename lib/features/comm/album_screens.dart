@@ -8,6 +8,7 @@ import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
 import 'comm_models.dart';
 import 'comm_repository.dart';
+import '../../core/i18n/i18n.dart';
 
 /// NTC-011 학부모: 앨범 목록
 class AlbumListScreen extends ConsumerWidget {
@@ -17,14 +18,14 @@ class AlbumListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final list = ref.watch(albumsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('앨범')),
+      appBar: AppBar(title: Text(tr('앨범'))),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(albumsProvider),
         child: list.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text(errorMessage(e))),
           data: (items) => items.isEmpty
-              ? ListView(children: const [SizedBox(height: 120), Center(child: Text('공유된 앨범이 없습니다', style: TextStyle(color: AppColors.textSecondary)))])
+              ? ListView(children: [SizedBox(height: 120), Center(child: Text(tr('공유된 앨범이 없습니다'), style: TextStyle(color: AppColors.textSecondary)))])
               : ListView.builder(
                   padding: const EdgeInsets.all(12),
                   itemCount: items.length,
@@ -43,7 +44,7 @@ class AlbumListScreen extends ConsumerWidget {
                             padding: const EdgeInsets.all(12),
                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Text(a.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                              Text('${a.institutionName} · ${a.itemCount}개 · ${DateFormat('M월 d일').format(a.createdAt)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                              Text(tr('{0} · {1}개 · {2}', [a.institutionName, a.itemCount, DateFormat(tr('M월 d일'), dateLocale()).format(a.createdAt)]), style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                             ]),
                           ),
                         ]),
@@ -80,7 +81,7 @@ class AlbumDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final album = ref.watch(albumDetailProvider(id));
     return Scaffold(
-      appBar: AppBar(title: Text(album.valueOrNull?.title ?? '앨범', overflow: TextOverflow.ellipsis)),
+      appBar: AppBar(title: Text(album.valueOrNull?.title ?? tr('앨범'), overflow: TextOverflow.ellipsis)),
       body: album.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(errorMessage(e))),
@@ -114,7 +115,7 @@ class AlbumDetailScreen extends ConsumerWidget {
     if (url == null) return;
     if (it.isVideo) {
       final ok = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      if (!ok && context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('영상을 열 수 있는 앱이 없습니다')));
+      if (!ok && context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('영상을 열 수 있는 앱이 없습니다'))));
       return;
     }
     await showDialog<void>(

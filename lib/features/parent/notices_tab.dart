@@ -7,6 +7,7 @@ import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
 import 'models.dart';
 import 'parent_providers.dart';
+import '../../core/i18n/i18n.dart';
 
 /// PAR-004 알림장함 — 고정 공지가 위, 안 읽은 건 굵게·점 표시. 누르면 상세(= 열람 처리).
 class NoticesTab extends ConsumerWidget {
@@ -22,11 +23,11 @@ class NoticesTab extends ConsumerWidget {
         error: (e, _) => ListView(children: [const SizedBox(height: 100), Center(child: Text(errorMessage(e)))]),
         data: (s) {
           if (s.items.isEmpty) {
-            return ListView(children: const [
+            return ListView(children: [
               SizedBox(height: 100),
               Icon(Icons.mail_outline, size: 48, color: AppColors.muted),
               SizedBox(height: 12),
-              Center(child: Text('받은 알림장이 없습니다', style: TextStyle(color: AppColors.textSecondary))),
+              Center(child: Text(tr('받은 알림장이 없습니다'), style: TextStyle(color: AppColors.textSecondary))),
             ]);
           }
           final pinned = s.items.where((n) => n.pinned).toList();
@@ -68,7 +69,7 @@ class NoticeTile extends StatelessWidget {
             children: [
               Row(children: [
                 if (n.pinned) const Padding(padding: EdgeInsets.only(right: 4), child: Icon(Icons.push_pin, size: 16, color: AppColors.accent)),
-                if (n.isAnnouncement) const _Tag('공지', AppColors.primary),
+                if (n.isAnnouncement) _Tag(tr('공지'), AppColors.primary),
                 Expanded(
                   child: Text(
                     n.title,
@@ -95,8 +96,8 @@ class NoticeTile extends StatelessWidget {
 
   static String _relative(DateTime t) {
     final diff = DateTime.now().difference(t);
-    if (diff.inMinutes < 1) return '방금';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}분 전';
+    if (diff.inMinutes < 1) return tr('방금');
+    if (diff.inMinutes < 60) return tr('{0}분 전', [diff.inMinutes]);
     if (diff.inHours < 24 && DateUtils.isSameDay(t, DateTime.now())) return DateFormat('HH:mm').format(t);
     return DateFormat('M/d HH:mm').format(t);
   }

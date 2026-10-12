@@ -7,6 +7,7 @@ import '../../core/api/api_error.dart';
 import 'merge_banner.dart';
 import 'models.dart';
 import 'parent_providers.dart';
+import '../../core/i18n/i18n.dart';
 
 /// PAR-001 통합 안심 타임라인 — 여러 학원의 등·하원을 시간순 한 줄로. 날짜별로 묶고 최신이 위.
 class TimelineTab extends ConsumerWidget {
@@ -18,9 +19,9 @@ class TimelineTab extends ConsumerWidget {
     final timeline = ref.watch(timelineProvider);
 
     if (children.valueOrNull?.isEmpty ?? false) {
-      return const _Empty(
+      return _Empty(
         icon: Icons.link_off,
-        text: '연결된 자녀가 없습니다.\n학원에 등록된 보호자 번호와 가입한 번호가 같은지 확인하거나,\n학원에서 받은 초대 링크로 자녀 정보를 보내 주세요.',
+        text: tr('연결된 자녀가 없습니다.\n학원에 등록된 보호자 번호와 가입한 번호가 같은지 확인하거나,\n학원에서 받은 초대 링크로 자녀 정보를 보내 주세요.'),
       );
     }
 
@@ -31,12 +32,12 @@ class TimelineTab extends ConsumerWidget {
         error: (e, _) => _Empty(icon: Icons.cloud_off, text: errorMessage(e)),
         data: (s) {
           if (s.items.isEmpty) {
-            return ListView(padding: const EdgeInsets.all(16), children: const [
+            return ListView(padding: const EdgeInsets.all(16), children: [
               MergeSuggestionBanner(),
               SizedBox(height: 80),
               Icon(Icons.schedule, size: 48, color: AppColors.muted),
               SizedBox(height: 12),
-              Text('아직 등·하원 기록이 없습니다', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
+              Text(tr('아직 등·하원 기록이 없습니다'), textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
             ]);
           }
           final rows = _withDateHeaders(s.items);
@@ -90,10 +91,10 @@ class _DateHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final today = DateUtils.dateOnly(DateTime.now());
     final label = day == today
-        ? '오늘'
+        ? tr('오늘')
         : day == today.subtract(const Duration(days: 1))
-            ? '어제'
-            : DateFormat('M월 d일 (E)', 'ko_KR').format(day);
+            ? tr('어제')
+            : DateFormat(tr('M월 d일 (E)'), dateLocale()).format(day);
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 16, 4, 8),
       child: Text(label, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textSecondary)),

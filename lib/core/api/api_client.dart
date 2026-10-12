@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../app/flavor.dart';
 import '../auth/models.dart';
 import '../auth/token_storage.dart';
+import '../i18n/i18n.dart';
 
 /// 메모리에 들고 있는 현재 세션 (토큰·선택 기관). 저장소와 함께 갱신한다.
 class SessionStore {
@@ -45,6 +46,11 @@ class ApiClient {
   ApiClient(this.session, {required this.onSessionExpired})
       : _raw = Dio(_options()),
         dio = Dio(_options()) {
+    // SET-007 서버 오류 문장을 화면 언어로 받는다 (로그인·refresh 용 _raw 포함)
+    _raw.interceptors.add(InterceptorsWrapper(onRequest: (o, h) {
+      o.headers['Accept-Language'] = currentLocale;
+      h.next(o);
+    }));
     dio.interceptors.add(QueuedInterceptorsWrapper(onRequest: _onRequest, onError: _onError));
   }
 
@@ -136,6 +142,7 @@ class ApiClient {
     if (t != null) o.headers['Authorization'] = 'Bearer ${t.accessToken}';
     final inst = session.institutionId;
     if (inst != null && o.extra['noInstitution'] != true) o.headers['X-Institution-Id'] = inst;
+    o.headers['Accept-Language'] = currentLocale;
     h.next(o);
   }
 

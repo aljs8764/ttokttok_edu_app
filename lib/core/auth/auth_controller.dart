@@ -8,6 +8,7 @@ import '../providers.dart';
 import '../push/push_service.dart';
 import 'models.dart';
 import 'social_sdk.dart';
+import '../i18n/i18n.dart';
 
 enum AuthStatus { loggedOut, loggedIn }
 
@@ -134,10 +135,10 @@ class AuthController extends Notifier<AuthState> {
     final user = AppUser.fromJson(json['user'] as Map<String, dynamic>);
 
     if (_flavor == Flavor.teacher && user.staffMemberships.isEmpty) {
-      throw ApiException(403, 'NOT_STAFF', '교직원 계정이 아닙니다. 학부모는 똑똑 학부모 앱을 이용해 주세요');
+      throw ApiException(403, 'NOT_STAFF', tr('교직원 계정이 아닙니다. 학부모는 똑똑 학부모 앱을 이용해 주세요'));
     }
     if (_flavor == Flavor.parent && user.memberships.isNotEmpty && user.memberships.every((m) => m.role.isStaff)) {
-      throw ApiException(403, 'NOT_PARENT', '학부모 계정이 아닙니다. 선생님은 똑똑 선생님 앱을 이용해 주세요');
+      throw ApiException(403, 'NOT_PARENT', tr('학부모 계정이 아닙니다. 선생님은 똑똑 선생님 앱을 이용해 주세요'));
     }
 
     await _session.saveTokens(TokenPair.fromJson(json));

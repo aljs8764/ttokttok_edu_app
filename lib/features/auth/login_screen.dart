@@ -8,6 +8,7 @@ import '../../core/api/api_error.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/providers.dart';
 import 'social_screens.dart';
+import '../../core/i18n/i18n.dart';
 
 /// AUTH-001 로그인. 교사앱은 이메일, 학부모앱은 휴대폰 번호가 아이디.
 /// 앱은 항상 로그인 유지(rememberMe) — 다시 켰을 때 바로 들어간다.
@@ -78,16 +79,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     Text.rich(
                       TextSpan(children: [
-                        const TextSpan(text: '똑똑'),
+                        TextSpan(text: tr('똑똑')),
                         TextSpan(text: '.', style: TextStyle(color: AppColors.accent)),
                       ]),
                       style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: AppColors.primary, letterSpacing: -0.5),
                     ),
                     const SizedBox(height: 4),
-                    Text(teacher ? '선생님용' : '학부모용', style: const TextStyle(color: AppColors.textSecondary)),
+                    Text(teacher ? tr('선생님용') : tr('학부모용'), style: const TextStyle(color: AppColors.textSecondary)),
                     const SizedBox(height: 32),
                     if (expired && _error == null) ...[
-                      const _Notice('로그인이 만료되었습니다. 다시 로그인해 주세요.'),
+                      _Notice(tr('로그인이 만료되었습니다. 다시 로그인해 주세요.')),
                       const SizedBox(height: 16),
                     ],
                     TextField(
@@ -95,7 +96,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       keyboardType: teacher ? TextInputType.emailAddress : TextInputType.phone,
                       autofillHints: [teacher ? AutofillHints.email : AutofillHints.telephoneNumber],
                       textInputAction: TextInputAction.next,
-                      decoration: InputDecoration(labelText: teacher ? '이메일' : '휴대폰 번호'),
+                      decoration: InputDecoration(labelText: teacher ? tr('이메일') : tr('휴대폰 번호')),
                     ),
                     const SizedBox(height: 12),
                     TextField(
@@ -105,7 +106,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       textInputAction: TextInputAction.done,
                       onSubmitted: (_) => _submit(),
                       decoration: InputDecoration(
-                        labelText: '비밀번호',
+                        labelText: tr('비밀번호'),
                         suffixIcon: IconButton(
                           icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
                           onPressed: () => setState(() => _obscure = !_obscure),
@@ -121,11 +122,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onPressed: _busy ? null : _submit,
                       child: _busy
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Text('로그인'),
+                          : Text(tr('로그인')),
                     ),
                     if (!teacher) ...[
                       const SizedBox(height: 8),
-                      OutlinedButton(onPressed: _busy ? null : () => context.push('/signup'), child: const Text('처음이에요 · 가입하기')),
+                      OutlinedButton(onPressed: _busy ? null : () => context.push('/signup'), child: Text(tr('처음이에요 · 가입하기'))),
                     ],
                     SocialLoginButtons(
                       teacher: teacher,
@@ -134,7 +135,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      teacher ? '계정은 원장님이 초대 메일 또는 임시 비밀번호로 만들어 드립니다.' : '학원에 등록된 보호자 번호로 가입하면 자녀가 자동으로 연결됩니다.',
+                      teacher ? tr('계정은 원장님이 초대 메일 또는 임시 비밀번호로 만들어 드립니다.') : tr('학원에 등록된 보호자 번호로 가입하면 자녀가 자동으로 연결됩니다.'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                     ),

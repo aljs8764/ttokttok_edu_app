@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../i18n/i18n.dart';
+import '../i18n/i18n.dart';
 
 /// "10월 7일 (수) 14:30"
-String formatDateTime(DateTime d) => DateFormat('M월 d일 (E) HH:mm', 'ko_KR').format(d);
+String formatDateTime(DateTime d) => DateFormat(tr('M월 d일 (E) HH:mm'), dateLocale()).format(d);
 
 /// 날짜 → 시간 순서로 고른다. 취소하면 null.
 Future<DateTime?> pickDateTime(BuildContext context, {DateTime? initial, DateTime? first, DateTime? last}) async {
@@ -62,7 +64,7 @@ class DateTimeField extends StatelessWidget {
               ? IconButton(icon: const Icon(Icons.close, size: 18), onPressed: onClear)
               : const Icon(Icons.event_outlined),
         ),
-        child: Text(value == null ? '선택' : formatDateTime(value!), style: TextStyle(color: value == null ? Colors.black45 : null)),
+        child: Text(value == null ? tr('선택') : formatDateTime(value!), style: TextStyle(color: value == null ? Colors.black45 : null)),
       ),
     );
   }

@@ -24,18 +24,18 @@ class MoreTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text('${user?.name ?? ''} 님', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+        Text(tr('{0} 님', [user?.name ?? '']), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
         const MergeSuggestionBanner(),
         Text(ref.t('우리 아이'), style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
         const SizedBox(height: 8),
         ...children.when(
           loading: () => [const LinearProgressIndicator()],
-          error: (_, __) => [const Text('불러오지 못했습니다')],
+          error: (_, __) => [Text(tr('불러오지 못했습니다'))],
           data: (list) => list.isEmpty
               ? [
-                  const Text(
-                    '아직 연결된 자녀가 없습니다. 학원에 등록된 보호자 번호로 가입했는지 확인하거나, 학원에서 받은 초대 링크로 자녀 정보를 보내 주세요.',
+                  Text(
+                    tr('아직 연결된 자녀가 없습니다. 학원에 등록된 보호자 번호로 가입했는지 확인하거나, 학원에서 받은 초대 링크로 자녀 정보를 보내 주세요.'),
                     style: TextStyle(color: AppColors.textSecondary, height: 1.5),
                   ),
                 ]
@@ -126,7 +126,7 @@ class MoreTab extends ConsumerWidget {
               title: Text(ref.t('언어')),
               trailing: SegmentedButton<String>(
                 showSelectedIcon: false,
-                segments: const [ButtonSegment(value: 'ko', label: Text('한국어')), ButtonSegment(value: 'en', label: Text('English'))],
+                segments: [ButtonSegment(value: 'ko', label: Text(tr('한국어'))), ButtonSegment(value: 'en', label: Text('English'))],
                 selected: {ref.watch(localeProvider)},
                 onSelectionChanged: (s) => ref.read(localeProvider.notifier).set(s.first),
               ),
@@ -154,16 +154,16 @@ class _ChildCard extends ConsumerWidget {
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('이름 바꾸기'),
+        title: Text(tr('이름 바꾸기')),
         content: TextField(
           controller: ctrl,
           autofocus: true,
           maxLength: 50,
-          decoration: const InputDecoration(helperText: '이 앱에서만 바뀌어요. 학원에 등록된 이름은 그대로예요.'),
+          decoration: InputDecoration(helperText: tr('이 앱에서만 바뀌어요. 학원에 등록된 이름은 그대로예요.')),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('취소')),
-          TextButton(onPressed: () => Navigator.pop(ctx, ctrl.text.trim()), child: const Text('저장')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('취소'))),
+          TextButton(onPressed: () => Navigator.pop(ctx, ctrl.text.trim()), child: Text(tr('저장'))),
         ],
       ),
     );
@@ -175,11 +175,11 @@ class _ChildCard extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('다른 아이로 나누기'),
-        content: Text('${e.institutionName}의 ${e.studentName}을(를) ${child.name}와(과) 다른 아이로 나눕니다. 학생앱 연결은 ${child.name}에 남아요.'),
+        title: Text(tr('다른 아이로 나누기')),
+        content: Text(tr('{0}의 {1}을(를) {2}와(과) 다른 아이로 나눕니다. 학생앱 연결은 {3}에 남아요.', [e.institutionName, e.studentName, child.name, child.name])),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('나누기')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('취소'))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('나누기'))),
         ],
       ),
     );
@@ -214,7 +214,7 @@ class _ChildCard extends ConsumerWidget {
               Expanded(child: Text(child.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
               PopupMenuButton<String>(
                 onSelected: (v) => v == 'rename' ? _rename(context, ref) : null,
-                itemBuilder: (_) => const [PopupMenuItem(value: 'rename', child: Text('이름 바꾸기'))],
+                itemBuilder: (_) => [PopupMenuItem(value: 'rename', child: Text(tr('이름 바꾸기')))],
               ),
             ]),
             const SizedBox(height: 4),
@@ -226,13 +226,13 @@ class _ChildCard extends ConsumerWidget {
                 title: Text(e.institutionName),
                 subtitle: Text([
                   e.typeLabel,
-                  if (e.studentName != child.name) '등록 이름 ${e.studentName}',
-                  if (e.status == 'PAUSED') '휴원',
-                  if (e.status == 'WITHDRAWN') '퇴원',
+                  if (e.studentName != child.name) tr('등록 이름 {0}', [e.studentName]),
+                  if (e.status == 'PAUSED') tr('휴원'),
+                  if (e.status == 'WITHDRAWN') tr('퇴원'),
                 ].join(' · ')),
                 trailing: multi
                     ? IconButton(
-                        tooltip: '다른 아이로 나누기',
+                        tooltip: tr('다른 아이로 나누기'),
                         icon: const Icon(Icons.call_split, size: 20),
                         onPressed: () => _split(context, ref, e),
                       )
@@ -243,7 +243,7 @@ class _ChildCard extends ConsumerWidget {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 icon: const Icon(Icons.qr_code_scanner, size: 18),
-                label: const Text('학생앱 연결'),
+                label: Text(tr('학생앱 연결')),
                 onPressed: () => showStudentDeviceSheet(context, child),
               ),
             ),

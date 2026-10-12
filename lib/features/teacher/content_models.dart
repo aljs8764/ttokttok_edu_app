@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme.dart';
 import '../parent/models.dart' show FileAttachment;
+import '../../core/i18n/i18n.dart';
 
 /// 교사앱 알림장·행사 모델 (NTC·EVT). 필드명은 백엔드 JSON 과 같다.
 
@@ -33,10 +34,10 @@ class Target {
 
 /// "전체" / "햇살반" / "햇살반 외 2"
 String targetSummary(List<Target> targets) {
-  if (targets.any((t) => t.isAll)) return '전체';
+  if (targets.any((t) => t.isAll)) return tr('전체');
   if (targets.isEmpty) return '-';
   final first = targets.first.name ?? '';
-  return targets.length == 1 ? first : '$first 외 ${targets.length - 1}';
+  return targets.length == 1 ? first : tr('{0} 외 {1}', [first, targets.length - 1]);
 }
 
 /// 페이지 응답 {items, page, size, totalElements, totalPages}
@@ -75,7 +76,7 @@ enum NoticeKind {
   static NoticeKind parse(String v) => v == 'ANNOUNCEMENT' ? NoticeKind.announcement : NoticeKind.note;
 
   String get api => this == NoticeKind.announcement ? 'ANNOUNCEMENT' : 'NOTE';
-  String get label => this == NoticeKind.announcement ? '공지' : '알림장';
+  String get label => tr(this == NoticeKind.announcement ? '공지' : '알림장');
 }
 
 enum NoticeStatus {
@@ -96,9 +97,9 @@ enum NoticeStatus {
       };
 
   String get label => switch (this) {
-        NoticeStatus.scheduled => '예약',
-        NoticeStatus.sent => '발송',
-        NoticeStatus.canceled => '취소',
+        NoticeStatus.scheduled => tr('예약'),
+        NoticeStatus.sent => tr('발송'),
+        NoticeStatus.canceled => tr('취소'),
       };
 
   Color get color => switch (this) {
@@ -393,7 +394,7 @@ enum RsvpAnswer {
         _ => null,
       };
 
-  String get label => this == RsvpAnswer.attend ? '참석' : '불참';
+  String get label => tr(this == RsvpAnswer.attend ? '참석' : '불참');
   Color get color => this == RsvpAnswer.attend ? AppColors.success : AppColors.error;
 }
 

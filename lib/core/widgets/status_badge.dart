@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme.dart';
 import '../../features/teacher/models.dart';
+import '../i18n/i18n.dart';
 
 /// IA 상태 5종(등원/하원/결석/지각/조퇴)을 상태 4개 + 플래그 2개에서 표시 (관리자 웹 attendanceLabel 과 같은 규칙)
 ({String label, Color color}) attendanceLabel(AttendanceStatus s, {bool isLate = false, bool isEarlyLeave = false}) {
   switch (s) {
     case AttendanceStatus.scheduled:
-      return (label: '등원 전', color: AppColors.muted);
+      return (label: tr('등원 전'), color: AppColors.muted);
     case AttendanceStatus.absent:
-      return (label: '결석', color: AppColors.error);
+      return (label: tr('결석'), color: AppColors.error);
     case AttendanceStatus.inClass:
-      return isLate ? (label: '등원(지각)', color: AppColors.warning) : (label: '등원', color: AppColors.success);
+      return isLate ? (label: tr('등원(지각)'), color: AppColors.warning) : (label: tr('등원'), color: AppColors.success);
     case AttendanceStatus.out:
-      if (isEarlyLeave) return (label: isLate ? '하원(지각·조퇴)' : '하원(조퇴)', color: AppColors.warning);
-      return isLate ? (label: '하원(지각)', color: AppColors.warning) : (label: '하원', color: AppColors.info);
+      if (isEarlyLeave) return (label: isLate ? tr('하원(지각·조퇴)') : tr('하원(조퇴)'), color: AppColors.warning);
+      return isLate ? (label: tr('하원(지각)'), color: AppColors.warning) : (label: tr('하원'), color: AppColors.info);
   }
 }
 

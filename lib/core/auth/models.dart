@@ -1,3 +1,4 @@
+import '../i18n/i18n.dart';
 /// AuthController.AuthResponse / UserResponse (백엔드)
 enum Role {
   owner,
@@ -11,10 +12,10 @@ enum Role {
   bool get isManager => this == Role.owner || this == Role.admin;
 
   String get label => switch (this) {
-        Role.owner => '원장',
-        Role.admin => '실장',
-        Role.teacher => '교사',
-        Role.parent => '학부모',
+        Role.owner => tr('원장'),
+        Role.admin => tr('실장'),
+        Role.teacher => tr('교사'),
+        Role.parent => tr('학부모'),
       };
 }
 

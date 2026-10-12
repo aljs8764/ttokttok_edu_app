@@ -7,6 +7,7 @@ import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
 import '../../core/widgets/status_badge.dart';
 import 'student_api.dart';
+import '../../core/i18n/i18n.dart';
 
 /// STD-002 학생앱 홈 — 오늘 수업과 출결, 큰 "QR 출석" 버튼.
 class StudentHomeScreen extends ConsumerStatefulWidget {
@@ -38,11 +39,11 @@ class _StudentHomeScreenState extends ConsumerState<StudentHomeScreen> with Widg
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('연결 해제'),
-        content: const Text('이 휴대폰의 연결을 끊습니다. 다시 쓰려면 부모님께 새 코드를 받아야 해요.'),
+        title: Text(tr('연결 해제')),
+        content: Text(tr('이 휴대폰의 연결을 끊습니다. 다시 쓰려면 부모님께 새 코드를 받아야 해요.')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('해제')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('취소'))),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('해제'))),
         ],
       ),
     );
@@ -56,11 +57,11 @@ class _StudentHomeScreenState extends ConsumerState<StudentHomeScreen> with Widg
     final home = ref.watch(studentHomeProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('똑똑 출석'),
+        title: Text(tr('똑똑 출석')),
         actions: [
           PopupMenuButton<String>(
             onSelected: (_) => _confirmLogout(),
-            itemBuilder: (_) => const [PopupMenuItem(value: 'logout', child: Text('이 기기 연결 해제'))],
+            itemBuilder: (_) => [PopupMenuItem(value: 'logout', child: Text(tr('이 기기 연결 해제')))],
           ),
         ],
       ),
@@ -71,13 +72,13 @@ class _StudentHomeScreenState extends ConsumerState<StudentHomeScreen> with Widg
           error: (e, _) => ListView(children: [
             const SizedBox(height: 120),
             Center(child: Text(errorMessage(e), style: const TextStyle(color: AppColors.textSecondary))),
-            Center(child: TextButton(onPressed: () => ref.invalidate(studentHomeProvider), child: const Text('다시 시도'))),
+            Center(child: TextButton(onPressed: () => ref.invalidate(studentHomeProvider), child: Text(tr('다시 시도')))),
           ]),
           data: (h) => ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              Text('${h.info.studentName} 안녕하세요', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-              Text(DateFormat('M월 d일 (E)', 'ko_KR').format(DateTime.now()), style: const TextStyle(color: AppColors.textSecondary)),
+              Text(tr('{0} 안녕하세요', [h.info.studentName]), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+              Text(DateFormat(tr('M월 d일 (E)'), dateLocale()).format(DateTime.now()), style: const TextStyle(color: AppColors.textSecondary)),
               if (h.info.institutionNames.isNotEmpty)
                 Text(h.info.institutionName, style: const TextStyle(color: AppColors.muted, fontSize: 13)),
               const SizedBox(height: 24),
@@ -86,7 +87,7 @@ class _StudentHomeScreenState extends ConsumerState<StudentHomeScreen> with Widg
                 child: FilledButton.icon(
                   style: FilledButton.styleFrom(backgroundColor: AppColors.primary, textStyle: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
                   icon: const Icon(Icons.qr_code_scanner, size: 40),
-                  label: const Text('QR 출석'),
+                  label: Text(tr('QR 출석')),
                   onPressed: () async {
                     await context.push('/scan');
                     ref.invalidate(studentHomeProvider);
@@ -94,12 +95,12 @@ class _StudentHomeScreenState extends ConsumerState<StudentHomeScreen> with Widg
                 ),
               ),
               const SizedBox(height: 8),
-              const Text('다니는 학원 어디서든 입구 QR 을 찍으면 도착·출발이 부모님께 알림으로 가요.',
+              Text(tr('다니는 학원 어디서든 입구 QR 을 찍으면 도착·출발이 부모님께 알림으로 가요.'),
                   textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
               const SizedBox(height: 28),
-              const Text('오늘 수업', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+              Text(tr('오늘 수업'), style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
               const SizedBox(height: 8),
-              if (h.today.isEmpty) const Text('오늘은 수업이 없어요', style: TextStyle(color: AppColors.textSecondary)),
+              if (h.today.isEmpty) Text(tr('오늘은 수업이 없어요'), style: TextStyle(color: AppColors.textSecondary)),
               for (final c in h.today)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
@@ -108,7 +109,7 @@ class _StudentHomeScreenState extends ConsumerState<StudentHomeScreen> with Widg
                       title: Text(c.classroomName, style: const TextStyle(fontWeight: FontWeight.w700)),
                       subtitle: Text('${h.info.institutionNames.length > 1 ? '${c.institutionName} · ' : ''}${c.startTime}~${c.endTime}${_times(c)}'),
                       trailing: c.attendance == null
-                          ? const Text('등원 전', style: TextStyle(color: AppColors.muted))
+                          ? Text(tr('등원 전'), style: TextStyle(color: AppColors.muted))
                           : StatusBadge(c.attendance!.status, isLate: c.attendance!.isLate, isEarlyLeave: c.attendance!.isEarlyLeave),
                     ),
                   ),
@@ -125,8 +126,8 @@ class _StudentHomeScreenState extends ConsumerState<StudentHomeScreen> with Widg
     if (a == null) return '';
     final f = DateFormat('HH:mm');
     final parts = [
-      if (a.checkInAt != null) '도착 ${f.format(a.checkInAt!)}',
-      if (a.checkOutAt != null) '출발 ${f.format(a.checkOutAt!)}',
+      if (a.checkInAt != null) tr('도착 {0}', [f.format(a.checkInAt!)]),
+      if (a.checkOutAt != null) tr('출발 {0}', [f.format(a.checkOutAt!)]),
     ];
     return parts.isEmpty ? '' : ' · ${parts.join(' · ')}';
   }

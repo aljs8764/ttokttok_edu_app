@@ -10,6 +10,7 @@ import 'content_models.dart';
 import 'content_repository.dart';
 import 'models.dart' show Classroom;
 import 'teacher_providers.dart';
+import '../../core/i18n/i18n.dart';
 
 /// 알림장·행사 받는 사람 (전체 / 반 / 원생 개별). 대상이 겹쳐도 백엔드가 원생 단위로 중복 제거한다.
 /// 전체는 원장·실장만, 교사는 담당 반과 그 반 원생만 (백엔드도 검사).
@@ -90,23 +91,23 @@ class _TargetPickerState extends ConsumerState<TargetPicker> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('받는 사람', style: TextStyle(fontWeight: FontWeight.w700)),
+        Text(tr('받는 사람'), style: TextStyle(fontWeight: FontWeight.w700)),
         if (manager)
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('기관 전체 (재원생 모두)'),
+            title: Text(tr('기관 전체 (재원생 모두)')),
             value: _all,
             onChanged: widget.enabled ? (v) => widget.onChanged(v ? const [Target.all] : const []) : null,
           ),
         if (!_all) ...[
           const SizedBox(height: 8),
-          const Text('반 (여러 개 선택 가능)', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          Text(tr('반 (여러 개 선택 가능)'), style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
           const SizedBox(height: 6),
           classes.when(
             loading: () => const LinearProgressIndicator(),
             error: (e, _) => Text(errorMessage(e), style: const TextStyle(color: AppColors.error)),
             data: (list) => list.isEmpty
-                ? const Text('선택할 수 있는 반이 없습니다', style: TextStyle(color: AppColors.textSecondary))
+                ? Text(tr('선택할 수 있는 반이 없습니다'), style: TextStyle(color: AppColors.textSecondary))
                 : Wrap(spacing: 8, runSpacing: 4, children: [
                     for (final c in list)
                       FilterChip(
@@ -122,8 +123,8 @@ class _TargetPickerState extends ConsumerState<TargetPicker> {
             enabled: widget.enabled,
             onChanged: _onQuery,
             decoration: InputDecoration(
-              labelText: '원생 개별 추가',
-              hintText: '이름 또는 보호자 번호 뒷 4자리',
+              labelText: tr('원생 개별 추가'),
+              hintText: tr('이름 또는 보호자 번호 뒷 4자리'),
               prefixIcon: const Icon(Icons.search),
               suffixIcon: _searching ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))) : null,
             ),
@@ -138,7 +139,7 @@ class _TargetPickerState extends ConsumerState<TargetPicker> {
               ]),
             )
           else if (_search.text.trim().isNotEmpty && !_searching && _searchError == null)
-            const Padding(padding: EdgeInsets.only(top: 6), child: Text('찾는 원생이 없습니다', style: TextStyle(color: AppColors.textSecondary))),
+            Padding(padding: EdgeInsets.only(top: 6), child: Text(tr('찾는 원생이 없습니다'), style: TextStyle(color: AppColors.textSecondary))),
           if (selectedStudents.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 8),

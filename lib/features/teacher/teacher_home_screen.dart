@@ -9,6 +9,7 @@ import '../../core/auth/auth_controller.dart';
 import 'models.dart';
 import 'teacher_providers.dart';
 import 'tutorial.dart';
+import '../../core/i18n/i18n.dart';
 
 /// 교사앱 홈 — 담당 반 목록. 오늘 수업 있는 반이 위로, 지금 수업 중인 반은 강조.
 class TeacherHomeScreen extends ConsumerWidget {
@@ -29,10 +30,10 @@ class TeacherHomeScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(mainAxisSize: MainAxisSize.min, children: [
-              Flexible(child: Text(auth.membership?.institutionName ?? '똑똑', overflow: TextOverflow.ellipsis)),
+              Flexible(child: Text(auth.membership?.institutionName ?? tr('똑똑'), overflow: TextOverflow.ellipsis)),
               if ((auth.user?.staffMemberships.length ?? 0) > 1) const Icon(Icons.arrow_drop_down),
             ]),
-            Text(DateFormat('M월 d일 (E)', 'ko_KR').format(now), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w400)),
+            Text(DateFormat(tr('M월 d일 (E)'), dateLocale()).format(now), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w400)),
           ],
           ),
         ),
@@ -44,7 +45,7 @@ class TeacherHomeScreen extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => _Message(errorMessage(e), retry: () => ref.invalidate(classesProvider)),
           data: (list) {
-            if (list.isEmpty) return const _Message('담당 반이 없습니다.\n원장님께 반 배정을 요청하세요.');
+            if (list.isEmpty) return _Message(tr('담당 반이 없습니다.\n원장님께 반 배정을 요청하세요.'));
             final sorted = [...list]..sort((a, b) {
                 final ah = a.heldOn(now) ? 0 : 1, bh = b.heldOn(now) ? 0 : 1;
                 return ah != bh ? ah - bh : a.startTime.compareTo(b.startTime);
@@ -92,10 +93,10 @@ class _ClassCard extends StatelessWidget {
                       Text(c.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
                       if (live) ...[
                         const SizedBox(width: 8),
-                        const _Pill('수업 중', AppColors.accent),
+                        _Pill(tr('수업 중'), AppColors.accent),
                       ] else if (!today) ...[
                         const SizedBox(width: 8),
-                        const _Pill('오늘 수업 없음', AppColors.muted),
+                        _Pill(tr('오늘 수업 없음'), AppColors.muted),
                       ],
                     ]),
                     const SizedBox(height: 4),
@@ -157,14 +158,14 @@ class _AccountMenu extends ConsumerWidget {
       },
       itemBuilder: (_) => [
         PopupMenuItem(enabled: false, child: Text('${auth.user?.name ?? ''} · ${auth.membership?.role.label ?? ''}')),
-        if (multi) const PopupMenuItem(value: 'inst', child: Text('기관 바꾸기')),
-        const PopupMenuItem(value: 'work', child: Text('출퇴근')),
-        const PopupMenuItem(value: 'shuttle', child: Text('셔틀 운행')),
-        const PopupMenuItem(value: 'consult', child: Text('상담 예약')),
-        const PopupMenuItem(value: 'tutorial', child: Text('출결 사용법 보기')),
-        const PopupMenuItem(value: 'social', child: Text('간편 로그인 연결')),
-        const PopupMenuItem(value: 'pw', child: Text('비밀번호 변경')),
-        const PopupMenuItem(value: 'logout', child: Text('로그아웃')),
+        if (multi) PopupMenuItem(value: 'inst', child: Text(tr('기관 바꾸기'))),
+        PopupMenuItem(value: 'work', child: Text(tr('출퇴근'))),
+        PopupMenuItem(value: 'shuttle', child: Text(tr('셔틀 운행'))),
+        PopupMenuItem(value: 'consult', child: Text(tr('상담 예약'))),
+        PopupMenuItem(value: 'tutorial', child: Text(tr('출결 사용법 보기'))),
+        PopupMenuItem(value: 'social', child: Text(tr('간편 로그인 연결'))),
+        PopupMenuItem(value: 'pw', child: Text(tr('비밀번호 변경'))),
+        PopupMenuItem(value: 'logout', child: Text(tr('로그아웃'))),
       ],
     );
   }
@@ -181,7 +182,7 @@ class _Message extends StatelessWidget {
         children: [
           const SizedBox(height: 120),
           Text(text, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textSecondary)),
-          if (retry != null) Center(child: TextButton(onPressed: retry, child: const Text('다시 시도'))),
+          if (retry != null) Center(child: TextButton(onPressed: retry, child: Text(tr('다시 시도')))),
         ],
       );
 }

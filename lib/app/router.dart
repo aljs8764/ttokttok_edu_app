@@ -30,6 +30,7 @@ import '../features/teacher/notice_form_screen.dart';
 import '../features/teacher/ops_screens.dart';
 import '../features/teacher/teacher_shell.dart';
 import 'flavor.dart';
+import '../core/i18n/i18n.dart';
 
 /// 인증 상태가 바뀌면 go_router 가 redirect 를 다시 돌게 하는 다리
 class _AuthListenable extends ChangeNotifier {
@@ -90,7 +91,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         GoRoute(path: '/', builder: (_, __) => const TeacherShell()),
         GoRoute(
           path: '/class/:id',
-          builder: (_, s) => ClassAttendanceScreen(classId: s.pathParameters['id']!, className: s.uri.queryParameters['name'] ?? '출결'),
+          builder: (_, s) => ClassAttendanceScreen(classId: s.pathParameters['id']!, className: s.uri.queryParameters['name'] ?? tr('출결')),
         ),
         // 알림장 (NTC) — /notices/new 가 /notices/:id 보다 먼저 매칭돼야 한다
         GoRoute(path: '/notices/new', builder: (_, __) => const NoticeFormScreen()),
@@ -105,7 +106,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           path: '/chat/:id',
           builder: (_, s) => ChatThreadScreen(
             id: s.pathParameters['id']!,
-            title: s.uri.queryParameters['title'] ?? '메시지',
+            title: s.uri.queryParameters['title'] ?? tr('메시지'),
             staff: s.uri.queryParameters['staff'] == 'true',
           ),
         ),
@@ -125,7 +126,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           path: '/chat/:id',
           builder: (_, s) => ChatThreadScreen(
             id: s.pathParameters['id']!,
-            title: s.uri.queryParameters['title'] ?? '메시지',
+            title: s.uri.queryParameters['title'] ?? tr('메시지'),
             staff: s.uri.queryParameters['staff'] == 'true',
           ),
         ),

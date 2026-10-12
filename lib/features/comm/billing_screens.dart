@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
 import '../../core/providers.dart';
+import '../../core/i18n/i18n.dart';
 
 /// Phase 2 ④ 학부모 납부 내역 (PAR-007 API, 청구서 발송 PAY-001 알림의 도착 화면).
 /// 앱 결제(PG)는 아직 없다 — 학원에 직접 납부하면 원장님이 확인해 "수납 완료"로 바뀐다.
@@ -54,7 +55,7 @@ final myInvoicesProvider = FutureProvider.autoDispose<List<ParentInvoice>>((ref)
 });
 
 final _won = NumberFormat('#,###', 'ko_KR');
-final _md = DateFormat('M월 d일', 'ko_KR');
+DateFormat get _md => DateFormat(tr('M월 d일'), dateLocale());
 
 class InvoiceListScreen extends ConsumerWidget {
   const InvoiceListScreen({super.key});
@@ -63,16 +64,16 @@ class InvoiceListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final list = ref.watch(myInvoicesProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('납부 내역')),
+      appBar: AppBar(title: Text(tr('납부 내역'))),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(myInvoicesProvider),
         child: list.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text(errorMessage(e), style: const TextStyle(color: AppColors.textSecondary))),
           data: (items) => items.isEmpty
-              ? ListView(children: const [
+              ? ListView(children: [
                   SizedBox(height: 160),
-                  Center(child: Text('받은 청구서가 없습니다', style: TextStyle(color: AppColors.textSecondary))),
+                  Center(child: Text(tr('받은 청구서가 없습니다'), style: TextStyle(color: AppColors.textSecondary))),
                 ])
               : ListView.separated(
                   padding: const EdgeInsets.only(bottom: 24),
@@ -80,18 +81,18 @@ class InvoiceListScreen extends ConsumerWidget {
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (_, i) {
                     if (i == 0) {
-                      return const Padding(
+                      return Padding(
                         padding: EdgeInsets.fromLTRB(16, 12, 16, 12),
                         child: Text(
-                          '학원에 직접 납부하시면 원장님이 확인한 뒤 "납부 완료"로 바뀝니다.',
+                          tr('학원에 직접 납부하시면 원장님이 확인한 뒤 "납부 완료"로 바뀝니다.'),
                           style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
                         ),
                       );
                     }
                     final v = items[i - 1];
                     return ListTile(
-                      title: Text('${v.title} · ${_won.format(v.amount)}원'),
-                      subtitle: Text('${v.studentName} · ${v.institutionName}\n기한 ${_md.format(v.dueDate)}${v.memo != null ? '\n${v.memo}' : ''}'),
+                      title: Text(tr('{0} · {1}원', [v.title, _won.format(v.amount)])),
+                      subtitle: Text(tr('{0} · {1}\n기한 {2}{3}', [v.studentName, v.institutionName, _md.format(v.dueDate), v.memo != null ? '\n${v.memo}' : ''])),
                       isThreeLine: true,
                       trailing: _StatusChip(v),
                     );
@@ -110,11 +111,11 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (v.status == 'PAID') {
-      return Chip(label: Text(v.paidOn != null ? '납부 완료 ${_md.format(v.paidOn!)}' : '납부 완료'), backgroundColor: AppColors.success.withValues(alpha: 0.12));
+      return Chip(label: Text(v.paidOn != null ? tr('납부 완료 {0}', [_md.format(v.paidOn!)]) : tr('납부 완료')), backgroundColor: AppColors.success.withValues(alpha: 0.12));
     }
     if (v.overdueDays > 0) {
-      return Chip(label: Text('연체 ${v.overdueDays}일'), backgroundColor: AppColors.error.withValues(alpha: 0.12));
+      return Chip(label: Text(tr('연체 {0}일', [v.overdueDays])), backgroundColor: AppColors.error.withValues(alpha: 0.12));
     }
-    return Chip(label: const Text('미납'), backgroundColor: AppColors.warning.withValues(alpha: 0.15));
+    return Chip(label: Text(tr('미납')), backgroundColor: AppColors.warning.withValues(alpha: 0.15));
   }
 }

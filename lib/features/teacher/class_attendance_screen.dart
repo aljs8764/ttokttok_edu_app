@@ -12,6 +12,7 @@ import 'models.dart';
 import 'ops_screens.dart';
 import 'sheets.dart';
 import 'teacher_providers.dart';
+import '../../core/i18n/i18n.dart';
 
 enum _Filter { all, waiting, inClass, out, absent }
 
@@ -73,7 +74,7 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
     try {
       await _ctrl.checkIn(a);
     } catch (e) {
-      if (mounted) _toast('${a.studentName} 등원 실패: ${errorMessage(e)}', error: true);
+      if (mounted) _toast(tr('{0} 등원 실패: {1}', [a.studentName, errorMessage(e)]), error: true);
     }
   }
 
@@ -84,25 +85,25 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
     try {
       await _ctrl.checkOut(a, dest);
     } catch (e) {
-      if (mounted) _toast('${a.studentName} 하원 실패: ${errorMessage(e)}', error: true);
+      if (mounted) _toast(tr('{0} 하원 실패: {1}', [a.studentName, errorMessage(e)]), error: true);
     }
   }
 
   Future<void> _flushNow() async {
     final sent = await ref.read(attendanceQueueProvider.notifier).flush();
     if (!mounted) return;
-    _toast(sent > 0 ? '$sent건을 보냈습니다' : '아직 보내지 못했습니다. 네트워크를 확인하세요');
+    _toast(sent > 0 ? tr('{0}건을 보냈습니다', [sent]) : tr('아직 보내지 못했습니다. 네트워크를 확인하세요'));
   }
 
   Future<void> _manual(Attendance a) async {
     if (a.dayId == null) {
-      _toast('오늘 출결 기록이 아직 없어 바꿀 수 없습니다. 등원을 먼저 눌러 주세요');
+      _toast(tr('오늘 출결 기록이 아직 없어 바꿀 수 없습니다. 등원을 먼저 눌러 주세요'));
       return;
     }
     final changed = await showStatusChangeSheet(context, a, (to, reason, isLate, isEarlyLeave) {
       return _ctrl.changeStatus(a, to, reason, isLate: isLate, isEarlyLeave: isEarlyLeave);
     });
-    if (changed == true && mounted) _toast('${a.studentName} 출결을 바꿨습니다');
+    if (changed == true && mounted) _toast(tr('{0} 출결을 바꿨습니다', [a.studentName]));
   }
 
   @override
@@ -119,7 +120,7 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
     // 오프라인 큐에서 서버가 거절한 항목 안내
     ref.listen(queueFailuresProvider, (_, next) {
       if (next.isEmpty) return;
-      _toast('전송하지 못한 항목: ${next.join(' / ')}', error: true);
+      _toast(tr('전송하지 못한 항목: {0}', [next.join(' / ')]), error: true);
       Future.microtask(() => ref.read(queueFailuresProvider.notifier).state = const []);
     });
     final queued = ref.watch(attendanceQueueProvider).where((q) => q.classroomId == widget.classId).length;
@@ -137,7 +138,7 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
           ValueListenableBuilder<bool>(
             valueListenable: connected,
             builder: (_, on, __) => Tooltip(
-              message: on ? '실시간 연결됨' : '실시간 연결 대기 중 (당겨서 새로고침)',
+              message: on ? tr('실시간 연결됨') : tr('실시간 연결 대기 중 (당겨서 새로고침)'),
               child: Padding(
                 padding: const EdgeInsets.only(right: 16),
                 child: Icon(Icons.circle, size: 10, color: on ? AppColors.success : AppColors.muted),
@@ -151,7 +152,7 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
         error: (e, _) => Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Text(errorMessage(e), style: const TextStyle(color: AppColors.textSecondary)),
-            TextButton(onPressed: _ctrl.reload, child: const Text('다시 시도')),
+            TextButton(onPressed: _ctrl.reload, child: Text(tr('다시 시도'))),
           ]),
         ),
         data: (list) {
@@ -166,9 +167,9 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
                 SliverToBoxAdapter(child: _Summary(counts: counts)),
                 SliverToBoxAdapter(child: _FilterBar(value: _filter, counts: counts, onChanged: (f) => setState(() => _filter = f))),
                 if (list.isEmpty)
-                  const SliverFillRemaining(
+                  SliverFillRemaining(
                     hasScrollBody: false,
-                    child: Center(child: Text('오늘 출결 대상 원생이 없습니다', style: TextStyle(color: AppColors.textSecondary))),
+                    child: Center(child: Text(tr('오늘 출결 대상 원생이 없습니다'), style: TextStyle(color: AppColors.textSecondary))),
                   )
                 else
                   SliverPadding(
@@ -215,8 +216,8 @@ class _QueueBanner extends StatelessWidget {
         child: Row(children: [
           const Icon(Icons.cloud_off, size: 18, color: AppColors.warning),
           const SizedBox(width: 8),
-          Expanded(child: Text('전송 대기 $count건 · 연결되면 자동으로 보냅니다', style: const TextStyle(fontSize: 13))),
-          TextButton(onPressed: onFlush, child: const Text('지금 보내기')),
+          Expanded(child: Text(tr('전송 대기 {0}건 · 연결되면 자동으로 보냅니다', [count]), style: const TextStyle(fontSize: 13))),
+          TextButton(onPressed: onFlush, child: Text(tr('지금 보내기'))),
         ]),
       );
 }
@@ -252,11 +253,11 @@ class _Summary extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE6E8F0))),
       child: Row(children: [
-        cell('등원 전', counts.waiting, AppColors.muted),
-        cell('수업 중', counts.inClass, AppColors.success),
-        cell('하원', counts.out, AppColors.info),
-        cell('결석', counts.absent, AppColors.error),
-        cell('지각', counts.late, AppColors.warning),
+        cell(tr('등원 전'), counts.waiting, AppColors.muted),
+        cell(tr('수업 중'), counts.inClass, AppColors.success),
+        cell(tr('하원'), counts.out, AppColors.info),
+        cell(tr('결석'), counts.absent, AppColors.error),
+        cell(tr('지각'), counts.late, AppColors.warning),
       ]),
     );
   }
@@ -271,11 +272,11 @@ class _FilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      (_Filter.all, '전체 ${counts.total}'),
-      (_Filter.waiting, '등원 전 ${counts.waiting}'),
-      (_Filter.inClass, '수업 중 ${counts.inClass}'),
-      (_Filter.out, '하원 ${counts.out}'),
-      (_Filter.absent, '결석 ${counts.absent}'),
+      (_Filter.all, tr('전체 {0}', [counts.total])),
+      (_Filter.waiting, tr('등원 전 {0}', [counts.waiting])),
+      (_Filter.inClass, tr('수업 중 {0}', [counts.inClass])),
+      (_Filter.out, tr('하원 {0}', [counts.out])),
+      (_Filter.absent, tr('결석 {0}', [counts.absent])),
     ];
     return SizedBox(
       height: 48,
@@ -306,10 +307,10 @@ class _StudentRow extends StatelessWidget {
 
   String get _detail {
     final parts = <String>[];
-    if (a.checkInAt != null) parts.add('등원 ${_hm.format(a.checkInAt!)}');
-    if (a.checkOutAt != null) parts.add('하원 ${_hm.format(a.checkOutAt!)}');
+    if (a.checkInAt != null) parts.add(tr('등원 {0}', [_hm.format(a.checkInAt!)]));
+    if (a.checkOutAt != null) parts.add(tr('하원 {0}', [_hm.format(a.checkOutAt!)]));
     if (a.nextDestinationName != null && a.status == AttendanceStatus.out) parts.add('→ ${a.nextDestinationName}');
-    if (a.queued) parts.add('전송 대기');
+    if (a.queued) parts.add(tr('전송 대기'));
     if (a.status == AttendanceStatus.absent && a.absenceReason != null) parts.add(a.absenceReason!);
     return parts.join(' · ');
   }
@@ -320,12 +321,12 @@ class _StudentRow extends StatelessWidget {
       AttendanceStatus.scheduled => FilledButton(
           onPressed: a.pending ? null : onCheckIn,
           style: FilledButton.styleFrom(backgroundColor: AppColors.success, minimumSize: const Size(84, 44)),
-          child: const Text('등원'),
+          child: Text(tr('등원')),
         ),
       AttendanceStatus.inClass => FilledButton(
           onPressed: a.pending ? null : onCheckOut,
           style: FilledButton.styleFrom(backgroundColor: AppColors.primary, minimumSize: const Size(84, 44)),
-          child: const Text('하원'),
+          child: Text(tr('하원')),
         ),
       _ => null,
     };
@@ -363,7 +364,7 @@ class _StudentRow extends StatelessWidget {
                 ),
               ),
               if (action != null) action,
-              IconButton(icon: const Icon(Icons.more_vert, color: AppColors.muted), tooltip: '수동 변경', onPressed: onManual),
+              IconButton(icon: const Icon(Icons.more_vert, color: AppColors.muted), tooltip: tr('수동 변경'), onPressed: onManual),
             ],
           ),
         ),

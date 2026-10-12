@@ -9,6 +9,7 @@ import '../../core/providers.dart';
 import '../parent/models.dart';
 import '../parent/parent_repository.dart';
 import '../parent/terms_gate.dart';
+import '../../core/i18n/i18n.dart';
 
 /// 학부모 가입 — 학원이 등록해 둔 보호자 번호로 가입하면 자녀가 자동으로 연결된다.
 /// 휴대폰 인증(SMS)은 아직 없다 (Open Issue 1). 약관: 학부모용(서비스·개인정보·만 14세 미만 법정대리인·마케팅).
@@ -71,13 +72,13 @@ class _ParentSignupScreenState extends ConsumerState<ParentSignupScreen> {
     final valid = _name.text.trim().isNotEmpty && _phoneOk && _pwOk && _pw.text == _pw2.text && requiredOk && terms.hasValue;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('학부모 가입')),
+      appBar: AppBar(title: Text(tr('학부모 가입'))),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text('학원에 알려 준 보호자 휴대폰 번호로 가입하면 자녀가 자동으로 연결됩니다.', style: TextStyle(color: AppColors.textSecondary)),
+          Text(tr('학원에 알려 준 보호자 휴대폰 번호로 가입하면 자녀가 자동으로 연결됩니다.'), style: TextStyle(color: AppColors.textSecondary)),
           const SizedBox(height: 20),
-          TextField(controller: _name, onChanged: (_) => setState(() {}), decoration: const InputDecoration(labelText: '이름'), maxLength: 50),
+          TextField(controller: _name, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: tr('이름')), maxLength: 50),
           const SizedBox(height: 4),
           TextField(
             controller: _phone,
@@ -85,9 +86,9 @@ class _ParentSignupScreenState extends ConsumerState<ParentSignupScreen> {
             inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9-]')), LengthLimitingTextInputFormatter(13)],
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              labelText: '휴대폰 번호 (로그인 아이디)',
+              labelText: tr('휴대폰 번호 (로그인 아이디)'),
               hintText: '010-1234-5678',
-              errorText: _phone.text.isNotEmpty && !_phoneOk ? '휴대폰 번호 형식이 아닙니다' : null,
+              errorText: _phone.text.isNotEmpty && !_phoneOk ? tr('휴대폰 번호 형식이 아닙니다') : null,
             ),
           ),
           const SizedBox(height: 12),
@@ -96,9 +97,9 @@ class _ParentSignupScreenState extends ConsumerState<ParentSignupScreen> {
             obscureText: true,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              labelText: '비밀번호',
-              helperText: '영문·숫자 포함 8자 이상',
-              errorText: _pw.text.isNotEmpty && !_pwOk ? '영문·숫자 포함 8자 이상' : null,
+              labelText: tr('비밀번호'),
+              helperText: tr('영문·숫자 포함 8자 이상'),
+              errorText: _pw.text.isNotEmpty && !_pwOk ? tr('영문·숫자 포함 8자 이상') : null,
             ),
           ),
           const SizedBox(height: 12),
@@ -106,14 +107,14 @@ class _ParentSignupScreenState extends ConsumerState<ParentSignupScreen> {
             controller: _pw2,
             obscureText: true,
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(labelText: '비밀번호 확인', errorText: _pw2.text.isNotEmpty && _pw2.text != _pw.text ? '비밀번호가 다릅니다' : null),
+            decoration: InputDecoration(labelText: tr('비밀번호 확인'), errorText: _pw2.text.isNotEmpty && _pw2.text != _pw.text ? tr('비밀번호가 다릅니다') : null),
           ),
           const SizedBox(height: 20),
           terms.when(
             loading: () => const LinearProgressIndicator(),
             error: (e, _) => Column(children: [
-              Text('약관을 불러오지 못했습니다: ${errorMessage(e)}', style: const TextStyle(color: AppColors.error)),
-              TextButton(onPressed: () => ref.invalidate(_publicTermsProvider), child: const Text('다시 시도')),
+              Text(tr('약관을 불러오지 못했습니다: {0}', [errorMessage(e)]), style: const TextStyle(color: AppColors.error)),
+              TextButton(onPressed: () => ref.invalidate(_publicTermsProvider), child: Text(tr('다시 시도'))),
             ]),
             data: (list) => Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -122,7 +123,7 @@ class _ParentSignupScreenState extends ConsumerState<ParentSignupScreen> {
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
                   value: allChecked,
-                  title: const Text('전체 동의', style: TextStyle(fontWeight: FontWeight.w700)),
+                  title: Text(tr('전체 동의'), style: TextStyle(fontWeight: FontWeight.w700)),
                   onChanged: (v) => setState(() => v == true ? _checked.addAll(list.map((t) => t.id)) : _checked.clear()),
                 ),
                 const Divider(height: 1),
@@ -133,7 +134,7 @@ class _ParentSignupScreenState extends ConsumerState<ParentSignupScreen> {
           ),
           if (_error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(_error!, style: const TextStyle(color: AppColors.error))),
           const SizedBox(height: 24),
-          FilledButton(onPressed: valid && !_busy ? () => _submit(list) : null, child: const Text('가입하기')),
+          FilledButton(onPressed: valid && !_busy ? () => _submit(list) : null, child: Text(tr('가입하기'))),
         ],
       ),
     );

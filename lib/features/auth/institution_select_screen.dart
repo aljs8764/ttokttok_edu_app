@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../../core/i18n/i18n.dart';
 
 /// 여러 기관에 소속된 교직원 — 오늘 일할 기관 선택 (스펙 7-8). 홈 화면 제목을 눌러 언제든 다시 바꾼다.
 class InstitutionSelectScreen extends ConsumerWidget {
@@ -15,8 +16,8 @@ class InstitutionSelectScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('기관 선택'),
-        actions: [TextButton(onPressed: () => ref.read(authControllerProvider.notifier).logout(), child: const Text('로그아웃'))],
+        title: Text(tr('기관 선택')),
+        actions: [TextButton(onPressed: () => ref.read(authControllerProvider.notifier).logout(), child: Text(tr('로그아웃')))],
       ),
       body: ListView.separated(
         padding: const EdgeInsets.all(16),

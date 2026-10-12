@@ -8,6 +8,7 @@ import 'event_follow_up.dart';
 import 'models.dart';
 import 'parent_providers.dart';
 import 'parent_repository.dart';
+import '../../core/i18n/i18n.dart';
 
 /// 행사 상세 + 자녀별 참석 응답 (PAR-005). 마감 전까지는 바꿀 수 있다.
 Future<void> showRsvpSheet(BuildContext context, ParentEvent e) {
@@ -29,9 +30,9 @@ class RsvpChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (c.answer) {
-      'ATTEND' => ('참석', AppColors.success),
-      'ABSENT' => ('불참', AppColors.error),
-      _ => ('미응답', AppColors.muted),
+      'ATTEND' => (tr('참석'), AppColors.success),
+      'ABSENT' => (tr('불참'), AppColors.error),
+      _ => (tr('미응답'), AppColors.muted),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -84,7 +85,7 @@ class _RsvpSheetState extends ConsumerState<_RsvpSheet> {
   @override
   Widget build(BuildContext context) {
     final e = _e;
-    final df = DateFormat('M월 d일 (E) HH:mm', 'ko_KR');
+    final df = DateFormat(tr('M월 d일 (E) HH:mm'), dateLocale());
     return SafeArea(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.85),
@@ -104,7 +105,7 @@ class _RsvpSheetState extends ConsumerState<_RsvpSheet> {
               Text(e.institutionName, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
               if (e.canceled) ...[
                 const SizedBox(height: 12),
-                const Text('취소된 행사입니다', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700)),
+                Text(tr('취소된 행사입니다'), style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700)),
               ],
               if (e.body != null && e.body!.isNotEmpty) ...[
                 const Divider(height: 28),
@@ -114,8 +115,8 @@ class _RsvpSheetState extends ConsumerState<_RsvpSheet> {
                 const Divider(height: 28),
                 Text(
                   e.open
-                      ? '참석 여부를 알려 주세요${e.rsvpDeadline != null ? ' (${DateFormat('M/d HH:mm').format(e.rsvpDeadline!)} 마감)' : ''}'
-                      : '응답이 마감되었습니다',
+                      ? tr('참석 여부를 알려 주세요') + (e.rsvpDeadline != null ? tr(' ({0} 마감)', [DateFormat('M/d HH:mm').format(e.rsvpDeadline!)]) : '')
+                      : tr('응답이 마감되었습니다'),
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 12),
@@ -127,9 +128,9 @@ class _RsvpSheetState extends ConsumerState<_RsvpSheet> {
                   const SizedBox(height: 8),
                   SegmentedButton<String>(
                     emptySelectionAllowed: true,
-                    segments: const [
-                      ButtonSegment(value: 'ATTEND', label: Text('참석'), icon: Icon(Icons.check)),
-                      ButtonSegment(value: 'ABSENT', label: Text('불참'), icon: Icon(Icons.close)),
+                    segments: [
+                      ButtonSegment(value: 'ATTEND', label: Text(tr('참석')), icon: Icon(Icons.check)),
+                      ButtonSegment(value: 'ABSENT', label: Text(tr('불참')), icon: Icon(Icons.close)),
                     ],
                     selected: {if (c.answer != null) c.answer!},
                     onSelectionChanged: !e.open || _busy != null ? null : (s) => s.isEmpty ? null : _answer(c, s.first),
@@ -141,14 +142,14 @@ class _RsvpSheetState extends ConsumerState<_RsvpSheet> {
                         controller: _reason(c),
                         maxLength: 200,
                         decoration: InputDecoration(
-                          labelText: '불참 사유 (선택)',
+                          labelText: tr('불참 사유 (선택)'),
                           isDense: true,
                           suffixIcon: IconButton(icon: const Icon(Icons.send), onPressed: _busy != null ? null : () => _answer(c, 'ABSENT')),
                         ),
                       ),
                     )
                   else if (c.reason != null && c.reason!.isNotEmpty)
-                    Padding(padding: const EdgeInsets.only(top: 6), child: Text('사유: ${c.reason}', style: const TextStyle(color: AppColors.textSecondary))),
+                    Padding(padding: const EdgeInsets.only(top: 6), child: Text(tr('사유: {0}', [c.reason]), style: const TextStyle(color: AppColors.textSecondary))),
                   const SizedBox(height: 16),
                 ],
                 if (_error != null) Text(_error!, style: const TextStyle(color: AppColors.error)),

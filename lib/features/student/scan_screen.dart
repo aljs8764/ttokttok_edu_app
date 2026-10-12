@@ -10,6 +10,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../app/theme.dart';
 import '../../core/api/api_error.dart';
 import 'student_api.dart';
+import '../../core/i18n/i18n.dart';
 
 /// STD-002 QR 출석 — 카메라로 입구 QR 을 찍으면 위치와 함께 서버로 보낸다.
 /// 서버가 수업 시간·등원 여부를 보고 등원/하원을 정한다 (스펙 7-7).
@@ -117,9 +118,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Padding(
+            Padding(
               padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
-              child: Text('어디로 가나요?', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+              child: Text(tr('어디로 가나요?'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
             ),
             for (final d in r.destinations)
               Padding(
@@ -150,7 +151,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('QR 출석')),
+      appBar: AppBar(title: Text(tr('QR 출석'))),
       body: switch (_phase) {
         _Phase.scanning || _Phase.sending => Stack(
             fit: StackFit.expand,
@@ -166,7 +167,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 right: 0,
                 bottom: 48,
                 child: Text(
-                  _phase == _Phase.sending ? '확인하고 있어요…' : '입구의 QR 을 네모 안에 맞춰 주세요',
+                  _phase == _Phase.sending ? tr('확인하고 있어요…') : tr('입구의 QR 을 네모 안에 맞춰 주세요'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, shadows: [Shadow(blurRadius: 6)]),
                 ),
@@ -175,7 +176,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             ],
           ),
         _Phase.done => _Done(result: _result!, onClose: () => Navigator.of(context).pop()),
-        _Phase.failed => _Failed(message: _error ?? '출석하지 못했어요', code: _errorCode, onRetry: _restart),
+        _Phase.failed => _Failed(message: _error ?? tr('출석하지 못했어요'), code: _errorCode, onRetry: _restart),
       },
     );
   }
@@ -204,7 +205,7 @@ class _CameraError extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         alignment: Alignment.center,
         child: Text(
-          permission ? '카메라 권한을 허용해 주세요.\n설정 → 앱 → 똑똑 출석 → 권한' : '카메라를 켤 수 없어요',
+          permission ? tr('카메라 권한을 허용해 주세요.\n설정 → 앱 → 똑똑 출석 → 권한') : tr('카메라를 켤 수 없어요'),
           textAlign: TextAlign.center,
           style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5),
         ),
@@ -227,16 +228,16 @@ class _Done extends StatelessWidget {
       ScanOutcome.checkedIn => (
           Icons.login,
           r.attendance?.isLate == true ? AppColors.warning : AppColors.success,
-          r.attendance?.isLate == true ? '도착했어요 (지각)' : '도착했어요',
-          '${_place(r)} · $time\n부모님께 알림을 보냈어요',
+          r.attendance?.isLate == true ? tr('도착했어요 (지각)') : tr('도착했어요'),
+          tr('{0} · {1}\n부모님께 알림을 보냈어요', [_place(r), time]),
         ),
       ScanOutcome.checkedOut => (
           Icons.logout,
           AppColors.info,
-          '출발했어요',
-          '${_place(r)} · $time${r.attendance?.nextDestinationName != null ? '\n→ ${r.attendance!.nextDestinationName}' : ''}\n부모님께 알림을 보냈어요',
+          tr('출발했어요'),
+          tr('{0} · {1}{2}\n부모님께 알림을 보냈어요', [_place(r), time, r.attendance?.nextDestinationName != null ? '\n→ ${r.attendance!.nextDestinationName}' : '']),
         ),
-      _ => (Icons.check_circle_outline, AppColors.muted, '오늘 출석은 이미 끝났어요', r.classroomName ?? ''),
+      _ => (Icons.check_circle_outline, AppColors.muted, tr('오늘 출석은 이미 끝났어요'), r.classroomName ?? ''),
     };
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -250,7 +251,7 @@ class _Done extends StatelessWidget {
           const SizedBox(height: 8),
           Text(sub, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, height: 1.5, color: AppColors.textSecondary)),
           const SizedBox(height: 40),
-          FilledButton(onPressed: onClose, child: const Text('확인')),
+          FilledButton(onPressed: onClose, child: Text(tr('확인'))),
         ],
       ),
     );
@@ -266,11 +267,11 @@ class _Failed extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hint = switch (code) {
-      'OUT_OF_RANGE' => '학원 안에서 다시 찍어 주세요. 위치가 정확하지 않으면 잠깐 기다렸다가 다시 해 보세요.',
-      'LOCATION_REQUIRED' => '설정 → 앱 → 똑똑 출석 → 위치 권한을 "앱 사용 중 허용"으로 바꿔 주세요.',
-      'QR_INVALID' => '입구의 새 QR 을 찍었는지 확인하고, 계속 안 되면 선생님께 말씀해 주세요.',
-      'NOT_ENROLLED' => '이 학원에 아직 등록되지 않았거나, 부모님 앱에서 같은 아이로 합쳐지지 않았어요. 부모님께 말씀해 주세요.',
-      'NO_CLASS_NOW' => '수업 시작 1시간 전부터 출석할 수 있어요.',
+      'OUT_OF_RANGE' => tr('학원 안에서 다시 찍어 주세요. 위치가 정확하지 않으면 잠깐 기다렸다가 다시 해 보세요.'),
+      'LOCATION_REQUIRED' => tr('설정 → 앱 → 똑똑 출석 → 위치 권한을 "앱 사용 중 허용"으로 바꿔 주세요.'),
+      'QR_INVALID' => tr('입구의 새 QR 을 찍었는지 확인하고, 계속 안 되면 선생님께 말씀해 주세요.'),
+      'NOT_ENROLLED' => tr('이 학원에 아직 등록되지 않았거나, 부모님 앱에서 같은 아이로 합쳐지지 않았어요. 부모님께 말씀해 주세요.'),
+      'NO_CLASS_NOW' => tr('수업 시작 1시간 전부터 출석할 수 있어요.'),
       _ => null,
     };
     return Padding(
@@ -287,9 +288,9 @@ class _Failed extends StatelessWidget {
             Text(hint, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textSecondary, height: 1.5)),
           ],
           const SizedBox(height: 32),
-          FilledButton(onPressed: onRetry, child: const Text('다시 찍기')),
+          FilledButton(onPressed: onRetry, child: Text(tr('다시 찍기'))),
           const SizedBox(height: 8),
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('닫기')),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('닫기'))),
         ],
       ),
     );

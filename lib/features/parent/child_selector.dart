@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'parent_providers.dart';
+import '../../core/i18n/i18n.dart';
 
 /// 자녀 선택 칩 (전체 / 아이별). 아이 하나가 여러 기관에 다니면 그 기관 모두가 한 칩이다 (스펙 7-8).
 class ChildSelector extends ConsumerWidget {
@@ -24,7 +25,7 @@ class ChildSelector extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                label: const Text('전체'),
+                label: Text(tr('전체')),
                 selected: selected == null,
                 onSelected: (_) => ref.read(selectedChildProvider.notifier).state = null,
               ),
@@ -33,7 +34,7 @@ class ChildSelector extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                label: Text(c.enrollments.length > 2 ? '${c.name} · 기관 ${c.enrollments.length}곳' : '${c.name} · ${c.institutionsLabel}'),
+                label: Text(c.enrollments.length > 2 ? tr('{0} · 기관 {1}곳', [c.name, c.enrollments.length]) : '${c.name} · ${c.institutionsLabel}'),
                 selected: multi ? selected == c.childId : true,
                 onSelected: multi ? (_) => ref.read(selectedChildProvider.notifier).state = c.childId : null,
               ),

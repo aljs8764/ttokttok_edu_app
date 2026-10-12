@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/theme.dart';
+import '../../core/i18n/i18n.dart';
 
 /// ONB-004 교사앱 첫 실행 튜토리얼 — 원터치 출결을 3단계로 안내한다.
 /// 진행 상태는 기기에 저장(다시 보기는 메뉴 > 사용법 보기).
@@ -76,7 +77,7 @@ class _TutorialDialogState extends State<_TutorialDialog> {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('원터치 출결 사용법', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          Text(tr('원터치 출결 사용법'), style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
           SizedBox(
             height: 220,
             child: PageView.builder(
@@ -88,9 +89,9 @@ class _TutorialDialogState extends State<_TutorialDialog> {
                 return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   CircleAvatar(radius: 32, backgroundColor: AppColors.primary.withValues(alpha: 0.08), child: Icon(s.icon, size: 32, color: AppColors.primary)),
                   const SizedBox(height: 16),
-                  Text(s.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                  Text(tr(s.title), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 8),
-                  Text(s.body, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textSecondary, height: 1.4)),
+                  Text(tr(s.body), textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textSecondary, height: 1.4)),
                 ]);
               },
             ),
@@ -106,11 +107,11 @@ class _TutorialDialogState extends State<_TutorialDialog> {
           ]),
           const SizedBox(height: 8),
           Row(children: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('건너뛰기')),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('건너뛰기'))),
             const Spacer(),
             FilledButton(
               onPressed: () => last ? Navigator.pop(context) : _page.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut),
-              child: Text(last ? '시작하기' : '다음'),
+              child: Text(last ? tr('시작하기') : tr('다음')),
             ),
           ]),
         ]),

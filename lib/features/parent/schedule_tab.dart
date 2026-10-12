@@ -7,6 +7,7 @@ import '../../core/api/api_error.dart';
 import 'models.dart';
 import 'parent_providers.dart';
 import 'rsvp_sheet.dart';
+import '../../core/i18n/i18n.dart';
 
 /// PAR-005 행사(응답 필요 먼저) + PAR-003 주간 스케줄(수업·행사, 자녀별)
 class ScheduleTab extends ConsumerWidget {
@@ -27,24 +28,24 @@ class ScheduleTab extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          const _SectionTitle('다가오는 행사'),
+          _SectionTitle(tr('다가오는 행사')),
           events.when(
             loading: () => const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
             error: (e, _) => Text(errorMessage(e)),
             data: (list) => list.isEmpty
-                ? const Padding(
+                ? Padding(
                     padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Text('예정된 행사가 없습니다', style: TextStyle(color: AppColors.textSecondary)),
+                    child: Text(tr('예정된 행사가 없습니다'), style: TextStyle(color: AppColors.textSecondary)),
                   )
                 : Column(children: [for (final e in list) _EventCard(e)]),
           ),
           const SizedBox(height: 16),
           Row(children: [
-            const Expanded(child: _SectionTitle('이번 주 일정')),
+            Expanded(child: _SectionTitle(tr('이번 주 일정'))),
             IconButton(icon: const Icon(Icons.chevron_left), onPressed: () => ref.read(weekOffsetProvider.notifier).state--),
             TextButton(
               onPressed: offset == 0 ? null : () => ref.read(weekOffsetProvider.notifier).state = 0,
-              child: Text(offset == 0 ? '이번 주' : offset > 0 ? '$offset주 뒤' : '${-offset}주 전'),
+              child: Text(offset == 0 ? tr('이번 주') : offset > 0 ? tr('{0}주 뒤', [offset]) : tr('{0}주 전', [-offset])),
             ),
             IconButton(icon: const Icon(Icons.chevron_right), onPressed: () => ref.read(weekOffsetProvider.notifier).state++),
           ]),
@@ -76,7 +77,7 @@ class _EventCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final df = DateFormat('M월 d일 (E) HH:mm', 'ko_KR');
+    final df = DateFormat(tr('M월 d일 (E) HH:mm'), dateLocale());
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Card(
@@ -103,9 +104,9 @@ class _EventCard extends ConsumerWidget {
                     ),
                   ),
                   if (e.canceled)
-                    const Text('취소됨', style: TextStyle(color: AppColors.error))
+                    Text(tr('취소됨'), style: TextStyle(color: AppColors.error))
                   else if (e.needsAnswer)
-                    const Text('응답 필요', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700)),
+                    Text(tr('응답 필요'), style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700)),
                 ]),
                 const SizedBox(height: 4),
                 Text('${df.format(e.startsAt)}${e.location != null ? ' · ${e.location}' : ''}', style: const TextStyle(color: AppColors.textSecondary)),
@@ -117,7 +118,7 @@ class _EventCard extends ConsumerWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 6),
                       child: Text(
-                        e.open ? '응답 마감 ${DateFormat('M/d HH:mm').format(e.rsvpDeadline!)}' : '응답이 마감되었습니다',
+                        e.open ? tr('응답 마감 {0}', [DateFormat('M/d HH:mm').format(e.rsvpDeadline!)]) : tr('응답이 마감되었습니다'),
                         style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                       ),
                     ),
@@ -138,7 +139,7 @@ class _WeekView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (w.children.isEmpty) {
-      return const Text('연결된 자녀가 없습니다', style: TextStyle(color: AppColors.textSecondary));
+      return Text(tr('연결된 자녀가 없습니다'), style: TextStyle(color: AppColors.textSecondary));
     }
     final today = DateUtils.dateOnly(DateTime.now());
     final multi = w.children.length > 1;
@@ -167,7 +168,7 @@ class _WeekView extends StatelessWidget {
                   SizedBox(
                     width: 52,
                     child: Text(
-                      DateFormat('E d', 'ko_KR').format(d),
+                      DateFormat('E d', dateLocale()).format(d),
                       style: TextStyle(fontWeight: d == today ? FontWeight.w800 : FontWeight.w500, color: d == today ? AppColors.accent : null),
                     ),
                   ),

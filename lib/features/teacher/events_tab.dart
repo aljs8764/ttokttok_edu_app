@@ -8,6 +8,7 @@ import '../../core/widgets/date_time_field.dart';
 import '../../core/widgets/pill.dart';
 import 'content_models.dart';
 import 'content_providers.dart';
+import '../../core/i18n/i18n.dart';
 
 /// 행사 탭 (EVT-001·003) — 내가 만든 행사 (원장·실장은 기관 전체). 예정 / 지난 행사 포함 전환.
 class TeacherEventsTab extends ConsumerStatefulWidget {
@@ -24,20 +25,20 @@ class _TeacherEventsTabState extends ConsumerState<TeacherEventsTab> {
   Widget build(BuildContext context) {
     final events = ref.watch(eventsProvider(_upcoming));
     return Scaffold(
-      appBar: AppBar(title: const Text('행사')),
+      appBar: AppBar(title: Text(tr('행사'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/events/new'),
         icon: const Icon(Icons.event_available_outlined),
-        label: const Text('행사 만들기'),
+        label: Text(tr('행사 만들기')),
       ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(value: true, label: Text('예정')),
-                ButtonSegment(value: false, label: Text('지난 행사 포함')),
+              segments: [
+                ButtonSegment(value: true, label: Text(tr('예정'))),
+                ButtonSegment(value: false, label: Text(tr('지난 행사 포함'))),
               ],
               selected: {_upcoming},
               onSelectionChanged: (s) => setState(() => _upcoming = s.first),
@@ -51,7 +52,7 @@ class _TeacherEventsTabState extends ConsumerState<TeacherEventsTab> {
                 error: (e, _) => ListView(children: [
                   const SizedBox(height: 120),
                   Text(errorMessage(e), textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textSecondary)),
-                  Center(child: TextButton(onPressed: () => ref.invalidate(eventsProvider(_upcoming)), child: const Text('다시 시도'))),
+                  Center(child: TextButton(onPressed: () => ref.invalidate(eventsProvider(_upcoming)), child: Text(tr('다시 시도')))),
                 ]),
                 data: (s) {
                   if (s.items.isEmpty) {
@@ -59,7 +60,7 @@ class _TeacherEventsTabState extends ConsumerState<TeacherEventsTab> {
                       const SizedBox(height: 120),
                       const Icon(Icons.event_outlined, size: 48, color: AppColors.muted),
                       const SizedBox(height: 12),
-                      Center(child: Text(_upcoming ? '예정된 행사가 없습니다' : '행사가 없습니다', style: const TextStyle(color: AppColors.textSecondary))),
+                      Center(child: Text(_upcoming ? tr('예정된 행사가 없습니다') : tr('행사가 없습니다'), style: const TextStyle(color: AppColors.textSecondary))),
                     ]);
                   }
                   return NotificationListener<ScrollNotification>(
@@ -104,7 +105,7 @@ class _EventTile extends StatelessWidget {
             children: [
               Row(children: [
                 Expanded(child: Text(e.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700))),
-                if (e.canceled) const Pill('취소', AppColors.muted),
+                if (e.canceled) Pill(tr('취소'), AppColors.muted),
               ]),
               const SizedBox(height: 4),
               Text('${formatDateTime(e.startsAt)}${e.location != null && e.location!.isNotEmpty ? ' · ${e.location}' : ''}', style: const TextStyle(color: AppColors.textSecondary)),
@@ -112,7 +113,7 @@ class _EventTile extends StatelessWidget {
               Text('${targetSummary(e.targets)} · ${e.authorName}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
               const SizedBox(height: 8),
               if (!e.rsvpEnabled)
-                const Text('참석 여부 받지 않음', style: TextStyle(fontSize: 13, color: AppColors.muted))
+                Text(tr('참석 여부 받지 않음'), style: TextStyle(fontSize: 13, color: AppColors.muted))
               else if (t != null)
                 TallyLine(t),
             ],
@@ -144,12 +145,12 @@ class TallyLine extends StatelessWidget {
       const SizedBox(height: 6),
       Text.rich(
         TextSpan(children: [
-          TextSpan(text: '참석 ${t.attend}', style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w600)),
+          TextSpan(text: tr('참석 {0}', [t.attend]), style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w600)),
           const TextSpan(text: '  ·  '),
-          TextSpan(text: '불참 ${t.absent}', style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w600)),
+          TextSpan(text: tr('불참 {0}', [t.absent]), style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w600)),
           const TextSpan(text: '  ·  '),
-          TextSpan(text: '미응답 ${t.pending}', style: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.w600)),
-          TextSpan(text: '  (대상 ${t.targets}명)', style: const TextStyle(color: AppColors.textSecondary)),
+          TextSpan(text: tr('미응답 {0}', [t.pending]), style: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.w600)),
+          TextSpan(text: tr('  (대상 {0}명)', [t.targets]), style: const TextStyle(color: AppColors.textSecondary)),
         ]),
         style: const TextStyle(fontSize: 13),
       ),

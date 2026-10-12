@@ -42,12 +42,15 @@ class _TtokAppState extends ConsumerState<TtokApp> {
   @override
   Widget build(BuildContext context) {
     final flavor = ref.watch(appConfigProvider).flavor;
+    final locale = ref.watch(localeProvider);
     return MaterialApp.router(
       title: flavor.title,
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
       routerConfig: ref.watch(routerProvider),
-      locale: materialLocale(ref.watch(localeProvider)),
+      locale: materialLocale(locale),
+      // 언어를 바꾸면 화면 전체를 다시 만든다 (tr() 문구는 위젯이 다시 그려질 때 바뀌므로)
+      builder: (context, child) => KeyedSubtree(key: ValueKey(locale), child: child ?? const SizedBox.shrink()),
       supportedLocales: const [Locale('ko', 'KR'), Locale('en', 'US')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

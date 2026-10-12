@@ -9,6 +9,7 @@ import 'content_models.dart';
 import 'content_providers.dart';
 import 'content_repository.dart';
 import 'target_picker.dart';
+import '../../core/i18n/i18n.dart';
 
 const _reminderOptions = <int, String>{
   6: '마감 6시간 전',
@@ -94,14 +95,14 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   String? get _timeError {
     final now = DateTime.now();
     final s = _startsAt;
-    if (s == null) return '시작 시각을 고르세요';
-    if (!_editing && !s.isAfter(now)) return '행사 시작은 현재 이후여야 합니다';
-    if (_endsAt != null && !_endsAt!.isAfter(s)) return '종료는 시작 이후여야 합니다';
+    if (s == null) return tr('시작 시각을 고르세요');
+    if (!_editing && !s.isAfter(now)) return tr('행사 시작은 현재 이후여야 합니다');
+    if (_endsAt != null && !_endsAt!.isAfter(s)) return tr('종료는 시작 이후여야 합니다');
     if (_rsvp) {
       final d = _deadline;
-      if (d == null) return '응답 마감 시각을 고르세요';
-      if (d.isAfter(s)) return '응답 마감은 행사 시작 전이어야 합니다';
-      if (!_editing && !d.isAfter(now)) return '응답 마감은 현재 이후여야 합니다';
+      if (d == null) return tr('응답 마감 시각을 고르세요');
+      if (d.isAfter(s)) return tr('응답 마감은 행사 시작 전이어야 합니다');
+      if (!_editing && !d.isAfter(now)) return tr('응답 마감은 현재 이후여야 합니다');
     }
     return null;
   }
@@ -130,7 +131,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       final e = _editing ? await repo.updateEvent(widget.id!, draft) : await repo.createEvent(draft);
       invalidateEvents(ref, id: e.id);
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(_editing ? '저장했습니다' : '행사를 만들고 학부모께 알렸습니다')));
+      messenger.showSnackBar(SnackBar(content: Text(_editing ? tr('저장했습니다') : tr('행사를 만들고 학부모께 알렸습니다'))));
       if (_editing) {
         context.pop();
       } else {
@@ -148,7 +149,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     final enabled = !_locked && !_busy;
     final timeError = _timeError;
     return Scaffold(
-      appBar: AppBar(title: Text(_editing ? '행사 수정' : '행사 만들기')),
+      appBar: AppBar(title: Text(_editing ? tr('행사 수정') : tr('행사 만들기'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : GestureDetector(
@@ -156,17 +157,17 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  if (_locked) const Padding(padding: EdgeInsets.only(bottom: 12), child: Text('취소된 행사는 수정할 수 없습니다.', style: TextStyle(color: AppColors.info))),
+                  if (_locked) Padding(padding: EdgeInsets.only(bottom: 12), child: Text(tr('취소된 행사는 수정할 수 없습니다.'), style: TextStyle(color: AppColors.info))),
                   TextField(
                     controller: _title,
                     enabled: enabled,
                     maxLength: 100,
                     onChanged: (_) => setState(() {}),
-                    decoration: const InputDecoration(labelText: '행사명', hintText: '예: 가을 소풍'),
+                    decoration: InputDecoration(labelText: tr('행사명'), hintText: tr('예: 가을 소풍')),
                   ),
                   const SizedBox(height: 12),
                   DateTimeField(
-                    label: '시작',
+                    label: tr('시작'),
                     value: _startsAt,
                     enabled: enabled,
                     first: _editing ? null : DateTime.now(),
@@ -175,7 +176,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                   ),
                   const SizedBox(height: 12),
                   DateTimeField(
-                    label: '종료 (선택)',
+                    label: tr('종료 (선택)'),
                     value: _endsAt,
                     enabled: enabled,
                     first: _startsAt,
@@ -184,7 +185,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                     onClear: () => setState(() => _endsAt = null),
                   ),
                   const SizedBox(height: 12),
-                  TextField(controller: _location, enabled: enabled, maxLength: 200, decoration: const InputDecoration(labelText: '장소')),
+                  TextField(controller: _location, enabled: enabled, maxLength: 200, decoration: InputDecoration(labelText: tr('장소'))),
                   const SizedBox(height: 4),
                   TextField(
                     controller: _body,
@@ -192,19 +193,19 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                     maxLength: 5000,
                     minLines: 5,
                     maxLines: 10,
-                    decoration: const InputDecoration(labelText: '안내 내용', hintText: '준비물, 회비, 복장 등', alignLabelWithHint: true),
+                    decoration: InputDecoration(labelText: tr('안내 내용'), hintText: tr('준비물, 회비, 복장 등'), alignLabelWithHint: true),
                   ),
                   const Divider(height: 32),
                   if (_editing) ...[
-                    Text('받는 사람: ${_targets.map((t) => t.name ?? '').join(', ')}', style: const TextStyle(color: AppColors.textSecondary)),
+                    Text(tr('받는 사람: {0}', [_targets.map((t) => t.name ?? '').join(', ')]), style: const TextStyle(color: AppColors.textSecondary)),
                     const SizedBox(height: 4),
-                    const Text('받는 사람은 행사를 만든 뒤에는 바꿀 수 없습니다.', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    Text(tr('받는 사람은 행사를 만든 뒤에는 바꿀 수 없습니다.'), style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                   ] else
                     TargetPicker(value: _targets, enabled: enabled, onChanged: (t) => setState(() => _targets = t)),
                   const Divider(height: 32),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('참석 여부 받기 (RSVP)'),
+                    title: Text(tr('참석 여부 받기 (RSVP)')),
                     // 수정에서는 RSVP 사용 여부를 바꾸지 못한다 (백엔드 UpdateRequest 에 없음)
                     value: _rsvp,
                     onChanged: enabled && !_editing ? (v) => setState(() => _rsvp = v) : null,
@@ -212,7 +213,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                   if (_rsvp) ...[
                     const SizedBox(height: 8),
                     DateTimeField(
-                      label: '응답 마감',
+                      label: tr('응답 마감'),
                       value: _deadline,
                       enabled: enabled,
                       first: _editing ? null : DateTime.now(),
@@ -222,8 +223,8 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
                       value: _reminder,
-                      decoration: const InputDecoration(labelText: '자동 독촉', helperText: '미응답 보호자께 한 번 푸시'),
-                      items: [for (final e in _reminderOptions.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+                      decoration: InputDecoration(labelText: tr('자동 독촉'), helperText: tr('미응답 보호자께 한 번 푸시')),
+                      items: [for (final e in _reminderOptions.entries) DropdownMenuItem(value: e.key, child: Text(tr(e.value)))],
                       onChanged: enabled ? (v) => setState(() => _reminder = v ?? 24) : null,
                     ),
                   ],
@@ -234,7 +235,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                     onPressed: _valid && !_busy ? _submit : null,
                     child: _busy
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text(_editing ? '저장' : '만들고 알리기'),
+                        : Text(_editing ? tr('저장') : tr('만들고 알리기')),
                   ),
                   const SizedBox(height: 24),
                 ],

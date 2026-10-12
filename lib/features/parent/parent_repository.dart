@@ -6,6 +6,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
 import '../../core/providers.dart';
 import 'models.dart';
+import '../../core/i18n/i18n.dart';
 
 /// 학부모 API (/me/*). 기관 헤더를 붙이지 않는다 — 여러 학원에 다니는 자녀를 한 번에 본다.
 class ParentRepository {
@@ -149,7 +150,7 @@ class StudentDeviceInfo {
 
   factory StudentDeviceInfo.fromJson(Map<String, dynamic> j) => StudentDeviceInfo(
         id: j['id'] as String,
-        deviceName: (j['deviceName'] as String?)?.isNotEmpty == true ? j['deviceName'] as String : '학생 휴대폰',
+        deviceName: (j['deviceName'] as String?)?.isNotEmpty == true ? j['deviceName'] as String : tr('학생 휴대폰'),
         createdAt: DateTime.parse(j['createdAt'] as String).toLocal(),
         lastSeenAt: j['lastSeenAt'] == null ? null : DateTime.parse(j['lastSeenAt'] as String).toLocal(),
       );

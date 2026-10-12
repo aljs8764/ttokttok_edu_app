@@ -7,8 +7,9 @@ import '../../core/api/api_error.dart';
 import '../parent/parent_providers.dart';
 import 'comm_models.dart';
 import 'comm_repository.dart';
+import '../../core/i18n/i18n.dart';
 
-final _md = DateFormat('M월 d일 (E)', 'ko_KR');
+DateFormat get _md => DateFormat(tr('M월 d일 (E)'), dateLocale());
 
 /// ATT-007 학부모: 결석·지각·조퇴 사전 신청 목록 + 새 신청
 class ParentAbsenceScreen extends ConsumerWidget {
@@ -18,20 +19,20 @@ class ParentAbsenceScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final list = ref.watch(myAbsenceRequestsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('결석·지각 신청')),
+      appBar: AppBar(title: Text(tr('결석·지각 신청'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           final ok = await showModalBottomSheet<bool>(context: context, isScrollControlled: true, builder: (_) => const _AbsenceForm());
           if (ok == true) ref.invalidate(myAbsenceRequestsProvider);
         },
         icon: const Icon(Icons.edit_calendar),
-        label: const Text('신청하기'),
+        label: Text(tr('신청하기')),
       ),
       body: list.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(errorMessage(e))),
         data: (items) => items.isEmpty
-            ? const Center(child: Text('신청 내역이 없습니다', style: TextStyle(color: AppColors.textSecondary)))
+            ? Center(child: Text(tr('신청 내역이 없습니다'), style: TextStyle(color: AppColors.textSecondary)))
             : ListView.separated(
                 padding: const EdgeInsets.only(bottom: 88),
                 itemCount: items.length,
@@ -54,7 +55,7 @@ class ParentAbsenceScreen extends ConsumerWidget {
                                 if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(e))));
                               }
                             },
-                            child: const Text('취소'),
+                            child: Text(tr('취소')),
                           )
                         : Chip(label: Text(r.statusLabel)),
                   );
@@ -119,20 +120,20 @@ class _AbsenceFormState extends ConsumerState<_AbsenceForm> {
       padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
       child: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('결석·지각·조퇴 신청', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          Text(tr('결석·지각·조퇴 신청'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             value: _studentId,
-            decoration: const InputDecoration(labelText: '아이 · 기관'),
+            decoration: InputDecoration(labelText: tr('아이 · 기관')),
             items: [for (final o in options) DropdownMenuItem(value: o.id, child: Text(o.label))],
             onChanged: (v) => setState(() => _studentId = v),
           ),
           const SizedBox(height: 12),
           SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'ABSENT', label: Text('결석')),
-              ButtonSegment(value: 'LATE', label: Text('지각')),
-              ButtonSegment(value: 'EARLY_LEAVE', label: Text('조퇴')),
+            segments: [
+              ButtonSegment(value: 'ABSENT', label: Text(tr('결석'))),
+              ButtonSegment(value: 'LATE', label: Text(tr('지각'))),
+              ButtonSegment(value: 'EARLY_LEAVE', label: Text(tr('조퇴'))),
             ],
             selected: {_kind},
             onSelectionChanged: (s) => setState(() => _kind = s.first),
@@ -154,7 +155,7 @@ class _AbsenceFormState extends ConsumerState<_AbsenceForm> {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.schedule, size: 18),
-                  label: Text(_time == null ? (_kind == 'LATE' ? '도착 예정' : '조퇴 시각') : _time!.format(context)),
+                  label: Text(_time == null ? (_kind == 'LATE' ? tr('도착 예정') : tr('조퇴 시각')) : _time!.format(context)),
                   onPressed: () async {
                     final t = await showTimePicker(context: context, initialTime: _time ?? TimeOfDay.now());
                     if (t != null) setState(() => _time = t);
@@ -164,9 +165,9 @@ class _AbsenceFormState extends ConsumerState<_AbsenceForm> {
             ],
           ]),
           const SizedBox(height: 12),
-          TextField(controller: _reason, maxLength: 300, maxLines: 3, onChanged: (_) => setState(() {}), decoration: const InputDecoration(labelText: '사유', border: OutlineInputBorder())),
+          TextField(controller: _reason, maxLength: 300, maxLines: 3, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: tr('사유'), border: OutlineInputBorder())),
           if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(color: Colors.red))),
-          SizedBox(width: double.infinity, child: FilledButton(onPressed: valid && !_busy ? _submit : null, child: const Text('신청'))),
+          SizedBox(width: double.infinity, child: FilledButton(onPressed: valid && !_busy ? _submit : null, child: Text(tr('신청')))),
         ]),
       ),
     );
@@ -181,14 +182,14 @@ class StaffAbsenceScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final list = ref.watch(staffAbsenceRequestsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('결석·지각 신청')),
+      appBar: AppBar(title: Text(tr('결석·지각 신청'))),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(staffAbsenceRequestsProvider),
         child: list.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text(errorMessage(e))),
           data: (items) => items.isEmpty
-              ? ListView(children: const [SizedBox(height: 120), Center(child: Text('앞으로 2주간 신청이 없습니다', style: TextStyle(color: AppColors.textSecondary)))])
+              ? ListView(children: [SizedBox(height: 120), Center(child: Text(tr('앞으로 2주간 신청이 없습니다'), style: TextStyle(color: AppColors.textSecondary)))])
               : ListView.separated(
                   itemCount: items.length,
                   separatorBuilder: (_, __) => const Divider(height: 1),
@@ -208,7 +209,7 @@ class StaffAbsenceScreen extends ConsumerWidget {
                                   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(e))));
                                 }
                               },
-                              child: const Text('확인'),
+                              child: Text(tr('확인')),
                             )
                           : Chip(label: Text(r.statusLabel)),
                     );
