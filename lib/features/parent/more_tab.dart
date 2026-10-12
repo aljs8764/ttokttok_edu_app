@@ -73,6 +73,14 @@ class MoreTab extends ConsumerWidget {
             ),
             const Divider(height: 1),
             ListTile(
+              leading: const Icon(Icons.forum_outlined),
+              title: Text(ref.t('학부모 커뮤니티')),
+              subtitle: Text(ref.t('익명으로 고민과 정보를 나눠요')),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/community'),
+            ),
+            const Divider(height: 1),
+            ListTile(
               leading: const Icon(Icons.event_available_outlined),
               title: Text(ref.t('상담 예약')),
               trailing: const Icon(Icons.chevron_right),

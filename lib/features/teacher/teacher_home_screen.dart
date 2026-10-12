@@ -151,6 +151,8 @@ class _AccountMenu extends ConsumerWidget {
             context.push('/shuttle-drive');
           case 'consult':
             context.push('/consults');
+          case 'community':
+            context.push('/community');
           case 'social':
             context.push('/settings/social');
           case 'tutorial':
@@ -167,6 +169,7 @@ class _AccountMenu extends ConsumerWidget {
         PopupMenuItem(value: 'work', child: Text(tr('출퇴근'))),
         PopupMenuItem(value: 'shuttle', child: Text(tr('셔틀 운행'))),
         PopupMenuItem(value: 'consult', child: Text(tr('상담 예약'))),
+        PopupMenuItem(value: 'community', child: Text(tr('커뮤니티'))),
         PopupMenuItem(value: 'tutorial', child: Text(tr('출결 사용법 보기'))),
         PopupMenuItem(value: 'social', child: Text(tr('간편 로그인 연결'))),
         PopupMenuItem(value: 'pw', child: Text(tr('비밀번호 변경'))),

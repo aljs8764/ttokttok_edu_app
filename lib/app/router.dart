@@ -13,6 +13,7 @@ import '../features/comm/absence_screens.dart';
 import '../features/comm/album_screens.dart';
 import '../features/comm/billing_screens.dart';
 import '../features/comm/chat_screens.dart';
+import '../features/comm/community_screens.dart';
 import '../features/comm/consult_screens.dart';
 import '../features/comm/survey_screens.dart';
 import '../features/parent/notice_detail_screen.dart';
@@ -65,6 +66,13 @@ GoRouter _studentRouter(Ref<Object?> ref) => GoRouter(
       ],
     );
 
+/// P3-⑦ 익명 커뮤니티 (교사앱·학부모앱 공통, 학생앱 제외)
+final communityRoutes = <RouteBase>[
+  GoRoute(path: '/community', builder: (_, __) => const CommunityScreen()),
+  GoRoute(path: '/community/me', builder: (_, __) => const CommunityMyScreen()),
+  GoRoute(path: '/community/posts/:id', builder: (_, s) => CommunityPostScreen(id: s.pathParameters['id']!)),
+];
+
 final routerProvider = Provider<GoRouter>((ref) {
   final flavor = ref.watch(appConfigProvider).flavor;
   if (flavor == Flavor.student) return _studentRouter(ref);
@@ -116,6 +124,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         GoRoute(path: '/staff-attendance', builder: (_, __) => const StaffCheckInScreen()),
         GoRoute(path: '/shuttle-drive', builder: (_, __) => const ShuttleDriveScreen()),
         GoRoute(path: '/consults', builder: (_, __) => const TeacherConsultScreen()),
+        ...communityRoutes,
         GoRoute(path: '/settings/social', builder: (_, __) => const SocialLinkScreen()),
         GoRoute(path: '/settings/password', builder: (_, __) => const ChangePasswordScreen(forced: false)),
       ] else ...[
@@ -138,6 +147,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         GoRoute(path: '/invoices', builder: (_, __) => const InvoiceListScreen()),
         GoRoute(path: '/shuttle', builder: (_, __) => const MyShuttleScreen()),
         GoRoute(path: '/consults', builder: (_, __) => const ParentConsultScreen()),
+        ...communityRoutes,
         GoRoute(path: '/counsel-notes', builder: (_, __) => const CounselNotesScreen()),
         GoRoute(path: '/timetable', builder: (_, __) => const TimetableScreen()),
         GoRoute(path: '/settings/social', builder: (_, __) => const SocialLinkScreen()),
