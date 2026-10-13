@@ -105,7 +105,7 @@ class _TeacherNoticeDetailScreenState extends ConsumerState<TeacherNoticeDetailS
               padding: const EdgeInsets.all(20),
               children: [
                 Row(children: [
-                  Pill(n.kind.label, n.kind == NoticeKind.announcement ? AppColors.accent : AppColors.primary),
+                  Pill(n.kind.label, n.kind == NoticeKind.announcement ? AppColors.highlight : AppColors.primary),
                   const SizedBox(width: 6),
                   Pill(n.status.label, n.status.color),
                   if (n.pinned) ...[const SizedBox(width: 6), const Icon(Icons.push_pin, size: 14, color: AppColors.muted)],

@@ -58,7 +58,7 @@ class _StudentLinkScreenState extends ConsumerState<StudentLinkScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text.rich(
-                    TextSpan(children: [TextSpan(text: tr('똑똑')), TextSpan(text: '.', style: TextStyle(color: AppColors.accent))]),
+                    TextSpan(children: [TextSpan(text: tr('똑똑')), TextSpan(text: '.', style: TextStyle(color: AppColors.highlight))]),
                     style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: AppColors.primary),
                   ),
                   Text(tr('QR 출석'), style: TextStyle(color: AppColors.textSecondary)),

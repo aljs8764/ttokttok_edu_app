@@ -68,7 +68,7 @@ class NoticeTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(children: [
-                if (n.pinned) const Padding(padding: EdgeInsets.only(right: 4), child: Icon(Icons.push_pin, size: 16, color: AppColors.accent)),
+                if (n.pinned) const Padding(padding: EdgeInsets.only(right: 4), child: Icon(Icons.push_pin, size: 16, color: AppColors.highlight)),
                 if (n.isAnnouncement) _Tag(tr('공지'), AppColors.primary),
                 Expanded(
                   child: Text(
@@ -78,7 +78,7 @@ class NoticeTile extends StatelessWidget {
                     style: TextStyle(fontSize: 16, fontWeight: n.unread ? FontWeight.w800 : FontWeight.w500),
                   ),
                 ),
-                if (n.unread) const Padding(padding: EdgeInsets.only(left: 6), child: Icon(Icons.circle, size: 8, color: AppColors.accent)),
+                if (n.unread) const Padding(padding: EdgeInsets.only(left: 6), child: Icon(Icons.circle, size: 8, color: AppColors.highlight)),
               ]),
               const SizedBox(height: 4),
               Text(n.body, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary)),

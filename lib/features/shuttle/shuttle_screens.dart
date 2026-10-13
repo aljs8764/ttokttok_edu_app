@@ -199,7 +199,7 @@ class ShuttleMap extends StatelessWidget {
                   ),
                 ),
               if (highlight != null)
-                Marker(point: highlight!, width: 36, height: 36, child: const Icon(Icons.home_rounded, color: AppColors.accent, size: 32)),
+                Marker(point: highlight!, width: 36, height: 36, child: const Icon(Icons.home_rounded, color: AppColors.highlight, size: 32)),
               if (vehicle != null)
                 Marker(
                   point: vehicle!,

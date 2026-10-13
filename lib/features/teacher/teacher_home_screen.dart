@@ -22,23 +22,40 @@ class TeacherHomeScreen extends ConsumerWidget {
     final classes = ref.watch(classesProvider);
     final now = DateTime.now();
 
+    final classCount = classes.valueOrNull?.length;
+    // 반별 오늘 출결 숫자 (DASH API classes[]: classroomId·present·scheduled·absent) — 없으면 숫자 칸을 숨긴다
+    final todayCounts = {
+      for (final c in ref.watch(teacherTodayProvider).valueOrNull?.classes ?? const <Map<String, dynamic>>[]) '${c['classroomId']}': c,
+    };
+    final multi = (auth.user?.staffMemberships.length ?? 0) > 1;
+
     return Scaffold(
       appBar: AppBar(
-        // 여러 학원 소속이면 제목을 눌러 학원을 바꾼다 (스펙 7-8)
+        toolbarHeight: 76,
+        titleSpacing: 20,
+        // 디자인(T_Classes): 작은 줄 '기관 · 날짜' + 큰 제목 '내 담당 반 N개'. 여러 학원 소속이면 눌러서 학원을 바꾼다 (스펙 7-8)
         title: InkWell(
-          onTap: (auth.user?.staffMemberships.length ?? 0) > 1 ? () => context.push('/institution') : null,
+          onTap: multi ? () => context.push('/institution') : null,
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(mainAxisSize: MainAxisSize.min, children: [
-              Flexible(child: Text(auth.membership?.institutionName ?? tr('똑똑'), overflow: TextOverflow.ellipsis)),
-              if ((auth.user?.staffMemberships.length ?? 0) > 1) const Icon(Icons.arrow_drop_down),
-            ]),
-            Text(DateFormat(tr('M월 d일 (E)'), dateLocale()).format(now), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w400)),
-          ],
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(mainAxisSize: MainAxisSize.min, children: [
+                Flexible(
+                  child: Text(
+                    '${auth.membership?.institutionName ?? tr('똑똑')} · ${DateFormat(tr('M월 d일 (E)'), dateLocale()).format(now)}',
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400, color: AppColors.plannedFg),
+                  ),
+                ),
+                if (multi) const Icon(Icons.arrow_drop_down, size: 20, color: AppColors.plannedFg),
+              ]),
+              const SizedBox(height: 2),
+              Text(classCount == null ? tr('내 담당 반') : tr('내 담당 반 {0}개', [classCount]),
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: -0.4)),
+            ],
           ),
         ),
-        actions: [const AttendanceTutorialGate(), _AccountMenu(auth: auth)],
+        actions: [const AttendanceTutorialGate(), _AccountMenu(auth: auth), const SizedBox(width: 8)],
       ),
       body: RefreshIndicator(
         onRefresh: () {
@@ -54,12 +71,24 @@ class TeacherHomeScreen extends ConsumerWidget {
                 final ah = a.heldOn(now) ? 0 : 1, bh = b.heldOn(now) ? 0 : 1;
                 return ah != bh ? ah - bh : a.startTime.compareTo(b.startTime);
               });
-            // DASH-018~023: 맨 위 '오늘 할 일' 요약 → 누르면 교사 대시보드
+            // DASH-018~023: 맨 위 '오늘 할 일' 요약 → 누르면 교사 대시보드. 맨 아래 '알림장 쓰기'
             return ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: sorted.length + 1,
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+              itemCount: sorted.length + 2,
               separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (_, i) => i == 0 ? const TodaySummaryCard() : _ClassCard(c: sorted[i - 1], now: now),
+              itemBuilder: (_, i) {
+                if (i == 0) return const TodaySummaryCard();
+                if (i == sorted.length + 1) {
+                  return FilledButton.icon(
+                    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
+                    onPressed: () => context.push('/notices/new'),
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    label: Text(tr('알림장 쓰기')),
+                  );
+                }
+                final c = sorted[i - 1];
+                return _ClassCard(c: c, now: now, counts: todayCounts[c.id]);
+              },
             );
           },
         ),
@@ -69,48 +98,55 @@ class TeacherHomeScreen extends ConsumerWidget {
 }
 
 class _ClassCard extends StatelessWidget {
-  const _ClassCard({required this.c, required this.now});
+  const _ClassCard({required this.c, required this.now, this.counts});
 
   final Classroom c;
   final DateTime now;
+  final Map<String, dynamic>? counts;
 
   @override
   Widget build(BuildContext context) {
     final today = c.heldOn(now);
     final hm = DateFormat('HH:mm').format(now);
     final live = today && hm.compareTo(c.startTime) >= 0 && hm.compareTo(c.endTime) <= 0;
-    return Card(
-      shape: live
-          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: const BorderSide(color: AppColors.accent, width: 1.5))
-          : null,
+    final (state, chipBg, chipFg) = live
+        ? (tr('수업 중'), AppColors.accent, AppColors.ink)
+        : today
+            ? (hm.compareTo(c.endTime) > 0 ? tr('끝남') : tr('예정'), AppColors.plannedBg, AppColors.plannedFg)
+            : (tr('오늘 수업 없음'), AppColors.plannedBg, AppColors.plannedFg);
+    final radius = BorderRadius.circular(AppRadius.card);
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: radius, side: BorderSide(color: live ? AppColors.ink : Colors.transparent, width: 2)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: radius,
         onTap: () => context.push('/class/${c.id}?name=${Uri.encodeQueryComponent(c.name)}'),
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(children: [
-                      Text(c.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-                      if (live) ...[
-                        const SizedBox(width: 8),
-                        _Pill(tr('수업 중'), AppColors.accent),
-                      ] else if (!today) ...[
-                        const SizedBox(width: 8),
-                        _Pill(tr('오늘 수업 없음'), AppColors.muted),
-                      ],
-                    ]),
-                    const SizedBox(height: 4),
-                    Text('${c.startTime}~${c.endTime}${c.headcount != null ? ' · ${c.headcount}명' : ''}',
-                        style: const TextStyle(color: AppColors.textSecondary)),
-                  ],
+              Row(children: [
+                Expanded(child: Text(c.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700))),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                  decoration: BoxDecoration(color: chipBg, borderRadius: BorderRadius.circular(AppRadius.chip)),
+                  child: Text(state, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: chipFg)),
                 ),
-              ),
-              const Icon(Icons.chevron_right, color: AppColors.muted),
+              ]),
+              const SizedBox(height: 6),
+              Text('${c.startTime} – ${c.endTime}${c.headcount != null ? tr(' · 원생 {0}명', [c.headcount]) : ''}',
+                  style: const TextStyle(fontSize: 13, color: AppColors.plannedFg)),
+              if (today && counts != null) ...[
+                const SizedBox(height: 12),
+                Row(children: [
+                  _Count(tr('등원'), counts!['present'], AppColors.checkInFg),
+                  const SizedBox(width: 6),
+                  _Count(tr('미등원'), counts!['scheduled'], AppColors.checkOutFg),
+                  const SizedBox(width: 6),
+                  _Count(tr('결석'), counts!['absent'], AppColors.ink),
+                ]),
+              ],
             ],
           ),
         ),
@@ -119,16 +155,25 @@ class _ClassCard extends StatelessWidget {
   }
 }
 
-class _Pill extends StatelessWidget {
-  const _Pill(this.text, this.color);
-  final String text;
+class _Count extends StatelessWidget {
+  const _Count(this.label, this.value, this.color);
+  final String label;
+  final Object? value;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(4)),
-        child: Text(text, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+  Widget build(BuildContext context) => Expanded(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(color: AppColors.ground, borderRadius: BorderRadius.circular(10)),
+          child: Text.rich(
+            TextSpan(children: [
+              TextSpan(text: '$label '),
+              TextSpan(text: '${value ?? 0}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: color)),
+            ]),
+            style: const TextStyle(fontSize: 12, color: AppColors.plannedFg),
+          ),
+        ),
       );
 }
 

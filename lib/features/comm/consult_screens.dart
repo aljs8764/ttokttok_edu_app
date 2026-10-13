@@ -413,7 +413,7 @@ class TimetableScreen extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 8, bottom: 6),
                   child: Text(tr('{0}요일', [tr(_weekdays[(d - 1).clamp(0, 6)])]) + (d == today ? tr(' · 오늘') : ''),
-                      style: TextStyle(fontWeight: FontWeight.w700, color: d == today ? AppColors.accent : null)),
+                      style: TextStyle(fontWeight: FontWeight.w700, color: d == today ? AppColors.highlight : null)),
                 ),
                 for (final s in byDay[d]!)
                   Card(

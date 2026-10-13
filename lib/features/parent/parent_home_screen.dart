@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app/theme.dart';
+import '../../core/widgets/logo_mark.dart';
 import '../../core/push/push_service.dart';
 import '../../core/realtime/stomp_service.dart';
 import 'child_selector.dart';
@@ -19,8 +19,8 @@ import 'schedule_tab.dart';
 import 'terms_gate.dart';
 import 'timeline_tab.dart';
 
-/// 학부모앱 홈 — 하단 탭 4개: 안심 타임라인(PAR-001) · 알림장(PAR-004) · 일정·행사(PAR-003·005) · 더보기
-/// 위쪽 자녀 선택은 모든 탭에 같이 적용된다.
+/// 학부모앱 홈 — 하단 탭 5개(디자인): 홈/안심 타임라인(PAR-001) · 알림장(PAR-004) · 일정(PAR-003) · 행사(PAR-005) · 더보기
+/// 위쪽 자녀 선택(PAR-006)은 더보기 외 모든 탭에 같이 적용된다.
 class ParentHomeScreen extends ConsumerStatefulWidget {
   const ParentHomeScreen({super.key});
 
@@ -34,7 +34,7 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
   Timer? _refreshDebounce;
   final _dirty = <String>{};
 
-  static const _titles = ['우리 아이', '알림장', '일정·행사', '더보기'];
+  static const _titles = ['홈', '알림장', '일정', '행사', '더보기'];
 
   @override
   void initState() {
@@ -120,32 +120,64 @@ class _ParentHomeScreenState extends ConsumerState<ParentHomeScreen> with Widget
     final unread = ref.watch(unreadNoticeCountProvider);
     final pendingRsvp = ref.watch(eventsProvider).valueOrNull?.where((e) => e.needsAnswer).length ?? 0;
 
+    Widget badged(IconData icon, int n) => Badge(isLabelVisible: n > 0, label: Text('$n'), child: Icon(icon));
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(ref.t(_titles[tab])),
-        bottom: tab < 3 ? const PreferredSize(preferredSize: Size.fromHeight(52), child: ChildSelector()) : null,
+        toolbarHeight: 64,
+        titleSpacing: 20,
+        // 홈은 로고, 나머지 탭은 화면 이름
+        title: tab == 0
+            ? Row(children: [
+                const LogoMark(size: 32),
+                const SizedBox(width: 8),
+                Text(tr('똑똑'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, letterSpacing: -0.4)),
+              ])
+            : Text(ref.t(_titles[tab])),
+        actions: [
+          // 알림 센터 화면(PAR-002)이 생기기 전까지는 알림장 탭으로 보낸다
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              child: IconButton(
+                tooltip: tr('알림'),
+                onPressed: () => ref.read(parentTabProvider.notifier).state = 1,
+                icon: Badge(smallSize: 8, isLabelVisible: unread > 0, child: const Icon(Icons.notifications_none_rounded)),
+              ),
+            ),
+          ),
+        ],
+        bottom: tab < 4 ? const PreferredSize(preferredSize: Size.fromHeight(ChildSelector.height), child: ChildSelector()) : null,
       ),
       body: IndexedStack(
         index: tab,
-        children: const [TimelineTab(), NoticesTab(), ScheduleTab(), MoreTab()],
+        children: const [
+          TimelineTab(),
+          NoticesTab(),
+          ScheduleTab(section: ScheduleSection.schedule),
+          ScheduleTab(section: ScheduleSection.events),
+          MoreTab(),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: tab,
         onDestinationSelected: (i) => ref.read(parentTabProvider.notifier).state = i,
-        indicatorColor: AppColors.primary.withValues(alpha: 0.1),
         destinations: [
-          NavigationDestination(icon: const Icon(Icons.home_outlined), selectedIcon: const Icon(Icons.home), label: ref.t('홈')),
+          NavigationDestination(icon: const Icon(Icons.home_outlined), selectedIcon: const Icon(Icons.home_rounded), label: ref.t('홈')),
           NavigationDestination(
-            icon: Badge(isLabelVisible: unread > 0, label: Text('$unread'), child: const Icon(Icons.mail_outline)),
-            selectedIcon: Badge(isLabelVisible: unread > 0, label: Text('$unread'), child: const Icon(Icons.mail)),
+            icon: badged(Icons.chat_bubble_outline, unread),
+            selectedIcon: badged(Icons.chat_bubble, unread),
             label: ref.t('알림장'),
           ),
+          NavigationDestination(icon: const Icon(Icons.calendar_today_outlined), selectedIcon: const Icon(Icons.calendar_today), label: ref.t('일정')),
           NavigationDestination(
-            icon: Badge(isLabelVisible: pendingRsvp > 0, label: Text('$pendingRsvp'), child: const Icon(Icons.event_outlined)),
-            selectedIcon: Badge(isLabelVisible: pendingRsvp > 0, label: Text('$pendingRsvp'), child: const Icon(Icons.event)),
-            label: ref.t('일정'),
+            icon: badged(Icons.flag_outlined, pendingRsvp),
+            selectedIcon: badged(Icons.flag, pendingRsvp),
+            label: ref.t('행사'),
           ),
-          NavigationDestination(icon: const Icon(Icons.more_horiz), label: ref.t('더보기')),
+          NavigationDestination(icon: const Icon(Icons.menu), label: ref.t('더보기')),
         ],
       ),
     );

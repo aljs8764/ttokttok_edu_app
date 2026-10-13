@@ -16,7 +16,7 @@ import 'notices_tab.dart';
 import 'teacher_home_screen.dart';
 import 'teacher_dashboard.dart';
 
-/// 교사앱 하단 탭 — 출결(반 목록) · 알림장 · 행사 · 메시지 · 결석·지각 신청. 탭은 처음 열 때 만든다 (시작할 때 불필요한 조회를 줄이려고).
+/// 교사앱 하단 탭 — 내 반(반 목록·출결) · 알림장 · 행사 · 메시지 · 결석·지각 신청. 탭은 처음 열 때 만든다 (시작할 때 불필요한 조회를 줄이려고).
 class TeacherShell extends ConsumerStatefulWidget {
   const TeacherShell({super.key});
 
@@ -114,7 +114,8 @@ class _TeacherShellState extends ConsumerState<TeacherShell> {
           _visited.add(i);
         }),
         destinations: [
-          NavigationDestination(icon: const Icon(Icons.fact_check_outlined), selectedIcon: const Icon(Icons.fact_check), label: ref.t('출결')),
+          // 디자인: 첫 탭 = '내 반'(담당 반 목록 → 반을 눌러 원터치 출결)
+          NavigationDestination(icon: const Icon(Icons.home_outlined), selectedIcon: const Icon(Icons.home_rounded), label: ref.t('내 반')),
           NavigationDestination(icon: const Icon(Icons.menu_book_outlined), selectedIcon: const Icon(Icons.menu_book), label: ref.t('알림장')),
           NavigationDestination(icon: const Icon(Icons.event_outlined), selectedIcon: const Icon(Icons.event), label: ref.t('행사')),
           NavigationDestination(icon: const Icon(Icons.chat_bubble_outline), selectedIcon: const Icon(Icons.chat_bubble), label: ref.t('메시지')),

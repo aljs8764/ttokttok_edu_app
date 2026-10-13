@@ -64,25 +64,38 @@ class _SocialLoginButtonsState extends ConsumerState<SocialLoginButtons> {
   Widget build(BuildContext context) {
     final list = ref.watch(socialProvidersProvider).valueOrNull ?? const <SocialKind>[];
     if (list.isEmpty) return const SizedBox.shrink();
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const SizedBox(height: 20),
-      Row(children: [
-        Expanded(child: Divider()),
-        Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text(tr('간편 로그인'), style: TextStyle(fontSize: 12, color: AppColors.textSecondary))),
-        Expanded(child: Divider()),
-      ]),
-      const SizedBox(height: 12),
-      for (final k in list) ...[
-        FilledButton(
+    // 교사앱 로그인은 다크(Ink) 배경 — 구분선·안내 글자색을 맞춘다
+    final dark = widget.teacher;
+    final lineColor = dark ? AppColors.inkFieldBorder : AppColors.inputBorder;
+    Widget button(SocialKind k) => FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: k == SocialKind.kakao ? const Color(0xFFFEE500) : const Color(0xFF03C75A),
-            foregroundColor: k == SocialKind.kakao ? const Color(0xD9000000) : Colors.white,
+            minimumSize: const Size(0, 52),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.field)),
+            textStyle: const TextStyle(fontFamily: kFontFamily, fontSize: 15, fontWeight: FontWeight.w600),
+            backgroundColor: k == SocialKind.kakao ? const Color(0xFFFEE500) : const Color(0xFF03A94D),
+            foregroundColor: k == SocialKind.kakao ? const Color(0xFF191600) : Colors.white,
           ),
           onPressed: _busy ? null : () => _go(k),
           child: Text(tr('{0}로 시작', [k.label])),
+        );
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const SizedBox(height: 24),
+      Row(children: [
+        Expanded(child: Divider(color: lineColor)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(tr('간편 로그인'), style: TextStyle(fontSize: 13, color: dark ? AppColors.inkTextSecondary : const Color(0xFF6B7487))),
         ),
-        const SizedBox(height: 8),
-      ],
+        Expanded(child: Divider(color: lineColor)),
+      ]),
+      const SizedBox(height: 12),
+      // 디자인: 2열 (카카오 | 네이버)
+      Row(children: [
+        for (var i = 0; i < list.length; i++) ...[
+          if (i > 0) const SizedBox(width: 10),
+          Expanded(child: button(list[i])),
+        ],
+      ]),
     ]);
   }
 }

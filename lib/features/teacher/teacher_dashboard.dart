@@ -66,7 +66,7 @@ class TodaySummaryCard extends ConsumerWidget {
           (Icons.how_to_reg_outlined, tr('출결 할 일'), d.attendanceTodo, AppColors.error),
           (Icons.health_and_safety_outlined, tr('주의 원생'), d.cautions.length, AppColors.warning),
           (Icons.forum_outlined, tr('소통 할 일'), d.commTodo, AppColors.info),
-          (Icons.campaign_outlined, tr('새 공지'), d.unreadMemos, AppColors.accent),
+          (Icons.campaign_outlined, tr('새 공지'), d.unreadMemos, AppColors.highlight),
         ];
         return Card(
           child: InkWell(
@@ -232,7 +232,7 @@ class _TeacherTodayScreenState extends ConsumerState<TeacherTodayScreen> {
   Widget _classTile(Json c) {
     final phase = c['phase'] as String;
     final (label, color) = switch (phase) {
-      'NOW' => (tr('수업 중'), AppColors.accent),
+      'NOW' => (tr('수업 중'), AppColors.highlight),
       'UPCOMING' => (tr('예정'), AppColors.info),
       _ => (tr('끝남'), AppColors.muted),
     };
@@ -270,7 +270,7 @@ class _TeacherTodayScreenState extends ConsumerState<TeacherTodayScreen> {
           AppColors.error,
           [if (text != null) tr('알레르기: {0}', [text]), if (sub != null) tr('지병·복용 약: {0}', [sub])].join(' · '),
         ),
-      'BIRTHDAY' => (Icons.cake_outlined, AppColors.accent, tr('오늘 생일 (만 {0}세)', [text ?? ''])),
+      'BIRTHDAY' => (Icons.cake_outlined, AppColors.highlight, tr('오늘 생일 (만 {0}세)', [text ?? ''])),
       'ABSENCE_NOTE' => (
           Icons.event_note_outlined,
           AppColors.warning,
@@ -320,7 +320,7 @@ class _TeacherTodayScreenState extends ConsumerState<TeacherTodayScreen> {
     final due = m['dueDate'] as String?;
     return ListTile(
       dense: true,
-      leading: Icon(Icons.campaign_outlined, color: unread ? AppColors.accent : AppColors.muted),
+      leading: Icon(Icons.campaign_outlined, color: unread ? AppColors.highlight : AppColors.muted),
       title: Text('${m['title']}', style: TextStyle(fontWeight: unread ? FontWeight.w800 : FontWeight.w500)),
       subtitle: Text([
         if (m['body'] != null) '${m['body']}',

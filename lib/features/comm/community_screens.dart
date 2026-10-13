@@ -217,7 +217,7 @@ class _BoardViewState extends ConsumerState<_BoardView> with AutomaticKeepAliveC
                   _load(reset: true);
                 }),
               ],
-              IconButton(onPressed: _search, icon: Icon(Icons.search, color: _q.isEmpty ? null : AppColors.accent), tooltip: tr('검색')),
+              IconButton(onPressed: _search, icon: Icon(Icons.search, color: _q.isEmpty ? null : AppColors.highlight), tooltip: tr('검색')),
             ]),
           ),
           if (_q.isNotEmpty)
@@ -562,7 +562,7 @@ class _CommunityPostScreenState extends ConsumerState<CommunityPostScreen> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           if (c.parentId != null) const Icon(Icons.subdirectory_arrow_right, size: 14, color: AppColors.textSecondary),
-          Text(anonLabel(c.anonNo), style: TextStyle(fontWeight: FontWeight.w700, color: c.anonNo == 0 ? AppColors.accent : null)),
+          Text(anonLabel(c.anonNo), style: TextStyle(fontWeight: FontWeight.w700, color: c.anonNo == 0 ? AppColors.highlight : null)),
           if (c.mine) Text(' (${tr('나')})', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
           const SizedBox(width: 6),
           Text(communityAgo(c.createdAt), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),

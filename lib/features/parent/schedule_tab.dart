@@ -9,9 +9,14 @@ import 'parent_providers.dart';
 import 'rsvp_sheet.dart';
 import '../../core/i18n/i18n.dart';
 
-/// PAR-005 행사(응답 필요 먼저) + PAR-003 주간 스케줄(수업·행사, 자녀별)
+/// 하단 탭 '일정'(PAR-003 주간 스케줄) / '행사'(PAR-005 행사 응답함) — 디자인에서 두 탭으로 나뉨
+enum ScheduleSection { schedule, events }
+
+/// PAR-005 행사(응답 필요 먼저) · PAR-003 주간 스케줄(수업·행사, 자녀별)
 class ScheduleTab extends ConsumerWidget {
-  const ScheduleTab({super.key});
+  const ScheduleTab({super.key, required this.section});
+
+  final ScheduleSection section;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,32 +33,34 @@ class ScheduleTab extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          _SectionTitle(tr('다가오는 행사')),
-          events.when(
-            loading: () => const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
-            error: (e, _) => Text(errorMessage(e)),
-            data: (list) => list.isEmpty
-                ? Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Text(tr('예정된 행사가 없습니다'), style: TextStyle(color: AppColors.textSecondary)),
-                  )
-                : Column(children: [for (final e in list) _EventCard(e)]),
-          ),
-          const SizedBox(height: 16),
-          Row(children: [
-            Expanded(child: _SectionTitle(tr('이번 주 일정'))),
-            IconButton(icon: const Icon(Icons.chevron_left), onPressed: () => ref.read(weekOffsetProvider.notifier).state--),
-            TextButton(
-              onPressed: offset == 0 ? null : () => ref.read(weekOffsetProvider.notifier).state = 0,
-              child: Text(offset == 0 ? tr('이번 주') : offset > 0 ? tr('{0}주 뒤', [offset]) : tr('{0}주 전', [-offset])),
+          if (section == ScheduleSection.events) ...[
+            _SectionTitle(tr('행사 응답함')),
+            events.when(
+              loading: () => const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
+              error: (e, _) => Text(errorMessage(e)),
+              data: (list) => list.isEmpty
+                  ? Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Text(tr('예정된 행사가 없습니다'), style: TextStyle(color: AppColors.textSecondary)),
+                    )
+                  : Column(children: [for (final e in list) _EventCard(e)]),
             ),
-            IconButton(icon: const Icon(Icons.chevron_right), onPressed: () => ref.read(weekOffsetProvider.notifier).state++),
-          ]),
-          week.when(
-            loading: () => const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
-            error: (e, _) => Text(errorMessage(e)),
-            data: (w) => _WeekView(w),
-          ),
+          ] else ...[
+            Row(children: [
+              Expanded(child: _SectionTitle(tr('이번 주 일정'))),
+              IconButton(icon: const Icon(Icons.chevron_left), onPressed: () => ref.read(weekOffsetProvider.notifier).state--),
+              TextButton(
+                onPressed: offset == 0 ? null : () => ref.read(weekOffsetProvider.notifier).state = 0,
+                child: Text(offset == 0 ? tr('이번 주') : offset > 0 ? tr('{0}주 뒤', [offset]) : tr('{0}주 전', [-offset])),
+              ),
+              IconButton(icon: const Icon(Icons.chevron_right), onPressed: () => ref.read(weekOffsetProvider.notifier).state++),
+            ]),
+            week.when(
+              loading: () => const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
+              error: (e, _) => Text(errorMessage(e)),
+              data: (w) => _WeekView(w),
+            ),
+          ],
         ],
       ),
     );
@@ -82,10 +89,10 @@ class _EventCard extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Card(
         shape: e.needsAnswer
-            ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: const BorderSide(color: AppColors.accent, width: 1.5))
+            ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.cardSmall), side: const BorderSide(color: AppColors.ink, width: 2))
             : null,
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.cardSmall),
           onTap: () => showRsvpSheet(context, e),
           child: Padding(
             padding: const EdgeInsets.all(14),
@@ -106,7 +113,7 @@ class _EventCard extends ConsumerWidget {
                   if (e.canceled)
                     Text(tr('취소됨'), style: TextStyle(color: AppColors.error))
                   else if (e.needsAnswer)
-                    Text(tr('응답 필요'), style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700)),
+                    Text(tr('응답 필요'), style: TextStyle(color: AppColors.highlight, fontWeight: FontWeight.w700)),
                 ]),
                 const SizedBox(height: 4),
                 Text('${df.format(e.startsAt)}${e.location != null ? ' · ${e.location}' : ''}', style: const TextStyle(color: AppColors.textSecondary)),
@@ -169,7 +176,7 @@ class _WeekView extends StatelessWidget {
                     width: 52,
                     child: Text(
                       DateFormat('E d', dateLocale()).format(d),
-                      style: TextStyle(fontWeight: d == today ? FontWeight.w800 : FontWeight.w500, color: d == today ? AppColors.accent : null),
+                      style: TextStyle(fontWeight: d == today ? FontWeight.w800 : FontWeight.w500, color: d == today ? AppColors.highlight : null),
                     ),
                   ),
                   Expanded(

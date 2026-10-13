@@ -46,7 +46,7 @@ void openFromPush(WidgetRef ref, PushPayload p) {
       final id = p.data['noticeId'];
       if (id != null) router.push('/notices/$id');
     case 'event':
-      tab.state = 2;
+      tab.state = 3; // 하단 탭: 홈·알림장·일정·행사·더보기
       router.go('/');
     case 'chat':
       router.go('/');

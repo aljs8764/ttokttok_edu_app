@@ -47,3 +47,14 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # 앱 UI/UX 디자인 서체 (OFL, assets/fonts/OFL.txt)
+  fonts:
+    - family: IBMPlexSansKR
+      fonts:
+        - asset: assets/fonts/IBMPlexSansKR-Regular.ttf
+        - asset: assets/fonts/IBMPlexSansKR-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IBMPlexSansKR-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/IBMPlexSansKR-Bold.ttf
+          weight: 700

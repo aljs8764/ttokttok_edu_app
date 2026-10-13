@@ -106,6 +106,61 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
     if (changed == true && mounted) _toast(tr('{0} 출결을 바꿨습니다', [a.studentName]));
   }
 
+  /// 미등원 전원 출석 — 한 명씩 원터치와 같은 경로(낙관적 반영 + 오프라인 큐)로 보낸다
+  Future<void> _checkInAll(List<Attendance> list) async {
+    final targets = list.where((a) => a.status == AttendanceStatus.scheduled && !a.pending).toList();
+    if (targets.isEmpty) return;
+    final ok = await _confirm(tr('미등원 {0}명을 모두 출석 처리할까요?\n보호자에게 등원 알림이 갑니다.', [targets.length]), tr('전원 출석'));
+    if (ok != true) return;
+    HapticFeedback.lightImpact();
+    var failed = 0;
+    for (final a in targets) {
+      try {
+        await _ctrl.checkIn(a);
+      } catch (_) {
+        failed++;
+      }
+    }
+    if (mounted) {
+      _toast(failed == 0
+          ? tr('{0}명 출석 · 보호자에게 알림을 보냈어요', [targets.length])
+          : tr('{0}명 중 {1}명은 처리하지 못했습니다', [targets.length, failed]), error: failed > 0);
+    }
+  }
+
+  /// 일괄 하원 — 수업 중인 원생을 같은 목적지로
+  Future<void> _checkOutAll(List<Attendance> list) async {
+    final targets = list.where((a) => a.status == AttendanceStatus.inClass && !a.pending).toList();
+    if (targets.isEmpty) return;
+    final dest = await showDestinationSheet(context, studentName: tr('수업 중 {0}명', [targets.length]), group: true);
+    if (dest == null) return;
+    HapticFeedback.lightImpact();
+    var failed = 0;
+    for (final a in targets) {
+      try {
+        await _ctrl.checkOut(a, dest);
+      } catch (_) {
+        failed++;
+      }
+    }
+    if (mounted) {
+      _toast(failed == 0
+          ? tr('{0}명 하원 → {1} · 보호자에게 알림을 보냈어요', [targets.length, dest.name])
+          : tr('{0}명 중 {1}명은 처리하지 못했습니다', [targets.length, failed]), error: failed > 0);
+    }
+  }
+
+  Future<bool?> _confirm(String text, String action) => showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          content: Text(text),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(tr('취소'))),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(action)),
+          ],
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final rows = ref.watch(classAttendanceProvider(widget.classId));
@@ -133,7 +188,11 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.className),
+        title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(tr('{0} 출결', [widget.className]), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          Text(DateFormat(tr('M월 d일 (E)'), dateLocale()).format(DateTime.now()),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: AppColors.textSecondary)),
+        ]),
         actions: [
           ValueListenableBuilder<bool>(
             valueListenable: connected,
@@ -172,16 +231,20 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
                     child: Center(child: Text(tr('오늘 출결 대상 원생이 없습니다'), style: TextStyle(color: AppColors.textSecondary))),
                   )
                 else
+                  // 디자인(T_Attendance): 흰 카드 하나 안에 원생 줄 + 구분선
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                    sliver: SliverList.separated(
-                      itemCount: shown.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      itemBuilder: (_, i) => _StudentRow(
-                        a: shown[i],
-                        onCheckIn: () => _checkIn(shown[i]),
-                        onCheckOut: () => _checkOut(shown[i]),
-                        onManual: () => _manual(shown[i]),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                    sliver: DecoratedSliver(
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.card)),
+                      sliver: SliverList.separated(
+                        itemCount: shown.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1, indent: 14, endIndent: 14, color: AppColors.plannedBg),
+                        itemBuilder: (_, i) => _StudentRow(
+                          a: shown[i],
+                          onCheckIn: () => _checkIn(shown[i]),
+                          onCheckOut: () => _checkOut(shown[i]),
+                          onManual: () => _manual(shown[i]),
+                        ),
                       ),
                     ),
                   ),
@@ -190,6 +253,29 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> w
           );
         },
       ),
+      // 미등원 전원 출석 · 일괄 하원
+      bottomNavigationBar: rows.valueOrNull == null || rows.valueOrNull!.isEmpty
+          ? null
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Row(children: [
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: rows.valueOrNull!.any((a) => a.status == AttendanceStatus.scheduled) ? () => _checkInAll(rows.valueOrNull!) : null,
+                      child: Text(tr('미등원 전원 출석')),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: rows.valueOrNull!.any((a) => a.status == AttendanceStatus.inClass) ? () => _checkOutAll(rows.valueOrNull!) : null,
+                      child: Text(tr('일괄 하원')),
+                    ),
+                  ),
+                ]),
+              ),
+            ),
     );
   }
 
@@ -212,7 +298,7 @@ class _QueueBanner extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
         padding: const EdgeInsets.fromLTRB(14, 6, 6, 6),
-        decoration: BoxDecoration(color: AppColors.warning.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: AppColors.noticeBg, borderRadius: BorderRadius.circular(14)),
         child: Row(children: [
           const Icon(Icons.cloud_off, size: 18, color: AppColors.warning),
           const SizedBox(width: 8),
@@ -242,22 +328,35 @@ class _Summary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 디자인: 미등원 · 등원 · 하원 · 결석 4칸 (지각은 아래 줄)
     Widget cell(String label, int n, Color color) => Expanded(
-          child: Column(children: [
-            Text('$n', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: color)),
-            Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-          ]),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+            child: Column(children: [
+              Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              const SizedBox(height: 2),
+              Text('$n', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
+            ]),
+          ),
         );
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE6E8F0))),
-      child: Row(children: [
-        cell(tr('등원 전'), counts.waiting, AppColors.muted),
-        cell(tr('수업 중'), counts.inClass, AppColors.success),
-        cell(tr('하원'), counts.out, AppColors.info),
-        cell(tr('결석'), counts.absent, AppColors.error),
-        cell(tr('지각'), counts.late, AppColors.warning),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          cell(tr('미등원'), counts.waiting, AppColors.checkOutFg),
+          const SizedBox(width: 6),
+          cell(tr('등원'), counts.inClass, AppColors.checkInFg),
+          const SizedBox(width: 6),
+          cell(tr('하원'), counts.out, AppColors.ink),
+          const SizedBox(width: 6),
+          cell(tr('결석'), counts.absent, AppColors.plannedFg),
+        ]),
+        if (counts.late > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 6, left: 4),
+            child: Text(tr('지각 {0}명', [counts.late]), style: const TextStyle(fontSize: 12, color: AppColors.checkOutFg, fontWeight: FontWeight.w600)),
+          ),
       ]),
     );
   }
@@ -317,53 +416,82 @@ class _StudentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // [출석] 파랑 채움 / [하원] 주황 테두리 / 처리 끝난 줄은 글자로만
     final action = switch (a.status) {
       AttendanceStatus.scheduled => FilledButton(
           onPressed: a.pending ? null : onCheckIn,
-          style: FilledButton.styleFrom(backgroundColor: AppColors.success, minimumSize: const Size(84, 44)),
-          child: Text(tr('등원')),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.checkInFg,
+            minimumSize: const Size(72, 44),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            textStyle: const TextStyle(fontFamily: kFontFamily, fontSize: 15, fontWeight: FontWeight.w700),
+          ),
+          child: Text(tr('출석')),
         ),
-      AttendanceStatus.inClass => FilledButton(
+      AttendanceStatus.inClass => OutlinedButton(
           onPressed: a.pending ? null : onCheckOut,
-          style: FilledButton.styleFrom(backgroundColor: AppColors.primary, minimumSize: const Size(84, 44)),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.checkOutFg,
+            side: const BorderSide(color: AppColors.checkOutButton, width: 2),
+            minimumSize: const Size(72, 44),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            textStyle: const TextStyle(fontFamily: kFontFamily, fontSize: 15, fontWeight: FontWeight.w700),
+          ),
           child: Text(tr('하원')),
         ),
-      _ => null,
+      AttendanceStatus.out => SizedBox(
+          width: 72,
+          child: Text(tr('하원 완료'), textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF6B7487))),
+        ),
+      AttendanceStatus.absent => SizedBox(
+          width: 72,
+          child: Text(tr('결석'), textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF6B7487))),
+        ),
     };
+    final initial = a.studentName.length > 1 ? a.studentName.characters.elementAt(1) : a.studentName.characters.firstOrNull ?? '?';
 
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onLongPress: onManual,
+    return InkWell(
+      onLongPress: onManual,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 66),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+          padding: const EdgeInsets.fromLTRB(14, 10, 4, 10),
           child: Row(
             children: [
+              Container(
+                width: 38,
+                height: 38,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(color: AppColors.plannedBg, shape: BoxShape.circle),
+                child: Text(initial, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.plannedFg)),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(children: [
-                      Flexible(child: Text(a.studentName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis)),
-                      const SizedBox(width: 8),
+                      Flexible(child: Text(a.studentName, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
+                      const SizedBox(width: 6),
                       StatusBadge(a.status, isLate: a.isLate, isEarlyLeave: a.isEarlyLeave),
                       if (a.queued) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         const Icon(Icons.cloud_off, size: 14, color: AppColors.warning),
                       ],
                       if (a.pending) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 1.5)),
                       ],
                     ]),
-                    if (_detail.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(_detail, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-                    ],
+                    const SizedBox(height: 2),
+                    Text(_detail.isEmpty ? tr('미등원') : _detail, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                   ],
                 ),
               ),
-              if (action != null) action,
+              const SizedBox(width: 8),
+              action,
               IconButton(icon: const Icon(Icons.more_vert, color: AppColors.muted), tooltip: tr('수동 변경'), onPressed: onManual),
             ],
           ),
